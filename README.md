@@ -1,3 +1,3 @@
-# cwmarketing_api_swift
+# CWMarketing iOS SDK
 
-A description of this package.
+Coming soon
