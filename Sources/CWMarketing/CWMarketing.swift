@@ -153,6 +153,7 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
+                        print(data)
                         completion(data, nil)
                     }
                     

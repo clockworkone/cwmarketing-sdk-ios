@@ -13,6 +13,7 @@ public struct CWConfig {
     var timeout: Int64?
     var version: String?
     var defaultLimitPerPage: Int64
+    var source: String?
     var cacheRules: CWConfigImageCache?
     
     init() {
@@ -21,11 +22,12 @@ public struct CWConfig {
         self.defaultLimitPerPage = 25
     }
     
-    public init(apiKey: String, loyaltyId: String, defaultLimitPerPage: Int64 = 25, cacheRules: CWConfigImageCache = CWConfigImageCache()) {
+    public init(apiKey: String, loyaltyId: String, defaultLimitPerPage: Int64 = 25, source: String? = nil, cacheRules: CWConfigImageCache = CWConfigImageCache()) {
         self.apiKey = apiKey
         self.loyaltyId = loyaltyId
         self.defaultLimitPerPage = defaultLimitPerPage
         self.cacheRules = cacheRules
+        self.source = source
     }
 }
 
