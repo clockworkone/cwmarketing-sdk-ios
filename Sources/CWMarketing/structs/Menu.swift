@@ -10,10 +10,12 @@ import Foundation
 public struct CWMenu {
     public var categories: [CWCategory]
     public var products: [CWProduct]
+    public var featured: [CWProduct]
     
     init() {
         self.categories = []
         self.products = []
+        self.featured = []
     }
 }
 
@@ -66,6 +68,10 @@ public struct CWProduct: Codable {
     var source: String?
     var isHidden: Bool
     var isDisabled: Bool
+    
+    var productHash: String
+    var orderModifiers: [CWModifier]?
+    public var count: Float
 }
 
 extension Array where Element == CWProduct {

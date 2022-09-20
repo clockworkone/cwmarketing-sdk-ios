@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "CWMarketing",
-    platforms: [.iOS(.v11), .macOS(.v10_13), .tvOS(.v12), .watchOS(.v7)],
+    platforms: [.iOS(.v13), .macOS(.v10_13), .tvOS(.v13), .watchOS(.v7)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
