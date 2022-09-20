@@ -242,7 +242,6 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
-                        print(data)
                         completion(data, nil)
                     }
                     
@@ -270,8 +269,22 @@ public final class CW {
             }
     }
     
-    public func getConcepts() {
+    public func getConcepts(page: Int64 = 1, completion: @escaping([CWConcept], NSError?) -> Void) {
+        let params = CWConceptRequest(limit: self.config.defaultLimitPerPage, page: page)
         
+        AF.request("\(uri)/concepts/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWConceptResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                    
+                case .failure(let err):
+                    completion([], err as NSError)
+                }
+            }
     }
     
     // MARK: - Private methods
@@ -288,5 +301,3 @@ extension CW: NSCopying {
         return self
     }
 }
-
-

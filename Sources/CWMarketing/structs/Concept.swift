@@ -7,6 +7,30 @@
 
 import Foundation
 
-public struct CWConcept {
+public struct CWConcept: Codable {
     var _id: String
+    public var name: String
+    public var comment: String?
+    public var image: CWImage?
+    var isDeleted: Bool
+    var isDisabled: Bool
+    public var additionalData: String?
+    var order: Int64
+    public var mainGroupId: String
+    public var mainTerminalId: String
+    var tpcasId: String
+}
+
+struct CWConceptRequest: Codable {
+    var limit: Int64?
+    var page: Int64?
+}
+
+struct CWConceptResponse: Codable {
+    var limit: Int64?
+    var page: Int64?
+    var pages: Int64?
+    var count: Int64?
+    var data: [CWConcept]?
+    var detail: String?
 }
