@@ -29,8 +29,8 @@ public struct CWCategory: Codable {
     var conceptId: String
     var terminalId: String
     public var order: Int64
-    var slug: String
-    var source: String
+    var slug: String?
+    var source: String?
     var isHidden: Bool
     var isDisabled: Bool
 }
@@ -62,8 +62,8 @@ public struct CWProduct: Codable {
     var conceptId: String
     var terminalId: String
     public var order: Int64
-    var slug: String
-    var source: String
+    var slug: String?
+    var source: String?
     var isHidden: Bool
     var isDisabled: Bool
 }
@@ -95,7 +95,7 @@ public struct CWModifier: Codable {
     var terminalId: String
     var order: Int64
     var image: CWImage?
-    var source: String
+    var source: String?
     var maxAmount: Float
     var minAmount: Float
     var required: Bool
@@ -111,7 +111,7 @@ public struct CWOptions: Codable {
     var terminalId: String
     var order: Int64
     var image: CWImage?
-    var source: String
+    var source: String?
     var maxAmount: Float
     var minAmount: Float
     var required: Bool
