@@ -47,11 +47,11 @@ extension Array where Element == CWCategory {
 
 public struct CWProduct: Codable {
     public var _id: String
-    var categoryId: String
+    public var categoryId: String
     public var name: String
     public var description: String?
     var externalId: String?
-    var code: String
+    public var code: String
     public var unit: String
     public var price: Float
     public var weight: CWWeight
@@ -69,9 +69,12 @@ public struct CWProduct: Codable {
     var isHidden: Bool
     var isDisabled: Bool
     
-    var productHash: String
+    @SkipCodable
+    var productHash: String?
+    @SkipCodable
     var orderModifiers: [CWModifier]?
-    public var count: Float
+    @SkipCodable
+    public var count: Float?
 }
 
 extension Array where Element == CWProduct {

@@ -46,7 +46,8 @@ extension CWProduct {
             }
         }
         
-        total += (self.getPrice() + modifiersPrice) * self.count
+        guard let count = self.count else { return UInt(total) }
+        total += (self.getPrice() + modifiersPrice) * count
         return UInt(total)
     }
     
@@ -63,7 +64,8 @@ extension CWProduct {
             }
         }
         
-        total += (self.getPrice() + modifiersPrice) * self.count
+        guard let count = self.count else { return total }
+        total += (self.getPrice() + modifiersPrice) * count
         return total
     }
     

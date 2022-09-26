@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  CWMarketing.swift
 //
 //
 //  Created by Clockwork, LLC on 20.09.2022.
@@ -53,8 +53,43 @@ public final class CW {
         }
     }
     
+    // MARK: - Auth
+    public func auth(phone: String, code: String, completion: @escaping(String?, NSError?) -> Void) {
+        let params = CWAuthRequest(phone: parsePhone(phone: phone), code: code)
+        
+        AF.request("\(uri)/auth/v1/token", method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseString { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                case .failure(let err):
+                    completion(nil, err as NSError)
+                }
+            }
+    }
+    
+    public func signup() {
+        
+    }
+    
+    public func requestCode(phone: String, completion: @escaping(CWCodeReponse?, NSError?) -> Void) {
+        let params = CWAuthRequest(phone: parsePhone(phone: phone))
+        
+        AF.request("\(uri)/auth/v1/code", method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWCodeReponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                case .failure(let err):
+                    completion(nil, err as NSError)
+                }
+            }
+    }
+    
     // MARK: - Cart
-    func getCart(concept: CWConcept) -> [CWProduct] {
+    public func getCart(concept: CWConcept) -> [CWProduct] {
         var cart: [CWProduct] = []
         queue.sync {
             if let unwrappedCart = self.cart[concept._id] {
@@ -64,7 +99,7 @@ public final class CW {
         return cart
     }
     
-    func wipeCart(concept: CWConcept) {
+    public func wipeCart(concept: CWConcept) {
         self.cart = [:]
         delegates.forEach { delegate in
             delegate.wipeCart()
@@ -72,14 +107,16 @@ public final class CW {
         }
     }
     
-    func addToCart(product: CWProduct, modifiers: [CWModifier] = [], amount: Float = 1.0) {
+    public func addToCart(product: CWProduct, modifiers: [CWModifier] = [], amount: Float = 1.0) {
         let conceptId = product.conceptId
         var p = product
         
         queue.async(flags: .barrier) {
             guard var cart = self.cart[conceptId] else { return }
             if let index = cart.firstIndex(where: { $0.productHash == self.productHash(product: p, modifiers: modifiers) }) {
-                cart[index].count += amount
+                if var count = cart[index].count {
+                    count += amount
+                }
             } else {
                 p.count = amount
                 p.orderModifiers = modifiers
@@ -94,7 +131,7 @@ public final class CW {
         }
     }
     
-    func removeEntireFromCart(product: CWProduct) {
+    public func removeEntireFromCart(product: CWProduct) {
         let conceptId = product.conceptId
         guard var cart = self.cart[conceptId] else { return }
         queue.async(flags: .barrier) {
@@ -109,7 +146,7 @@ public final class CW {
         }
     }
     
-    func getTotal(conceptId: String) -> Float {
+    public func getTotal(conceptId: String) -> Float {
         var total: Float = 0.0
         queue.sync {
             guard let cart = self.cart[conceptId] else { return }
@@ -123,7 +160,8 @@ public final class CW {
                         }
                     }
                 }
-                total += (product.getPrice() + modifiersPrice) * product.count
+                guard let count = product.count else { return }
+                total += (product.getPrice() + modifiersPrice) * count
             }
         }
         return total
@@ -262,13 +300,66 @@ public final class CW {
                     if let data = val.data {
                         completion(data, nil)
                     }
-                    
+
                 case .failure(let err):
+                    debugPrint(err)
                     completion([], err as NSError)
                 }
             }
     }
     
+    public func getFavorites(conceptId concept: String, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
+        let params = CWFavoriteRequest(conceptId: concept, limit: self.config.defaultLimitPerPage, page: page)
+        
+        AF.request("\(uri)/favorite/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWProductResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+
+                case .failure(let err):
+                    debugPrint(err)
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    public func addFavorite(product: CWProduct, completion: @escaping(NSError?) -> Void) {
+        let params = CWFavoriteRequest(conceptId: product.conceptId, productCode: product.code)
+        
+        AF.request("\(uri)/favorite/v1/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .response() { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(nil)
+                case .failure(let err):
+                    debugPrint(err)
+                    completion(err as NSError)
+                }
+            }
+    }
+    
+    public func deleteFavorite(product: CWProduct, completion: @escaping(NSError?) -> Void) {
+        let params = CWFavoriteRequest(conceptId: product.conceptId, productCode: product.code)
+        
+        AF.request("\(uri)/favorite/v1/", method: .delete, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .response() { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(nil)
+                case .failure(let err):
+                    debugPrint(err)
+                    completion(err as NSError)
+                }
+            }
+    }
+    
+    // MARK: - Concepts
     public func getConcepts(page: Int64 = 1, completion: @escaping([CWConcept], NSError?) -> Void) {
         let params = CWConceptRequest(limit: self.config.defaultLimitPerPage, page: page)
         
@@ -287,13 +378,47 @@ public final class CW {
             }
     }
     
+    // MARK: - Terminals
+    public func getTerminals(page: Int64 = 1, completion: @escaping([CWTerminal], NSError?) -> Void) {
+        let params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
+        
+        AF.request("\(uri)/terminals/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWTerminalResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                    
+                case .failure(let err):
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
     // MARK: - Private methods
     fileprivate func productHash(product: CWProduct, modifiers: [CWModifier]) -> String {
         let mString = "\(product._id)\(modifiers.map { $0.options.map { $0.name }.joined() }.joined())"
         let digest = Insecure.SHA1.hash(data: mString.data(using: .utf8) ?? Data())
         return digest.map { String(format: "%02hhx", $0) }.joined()
     }
-
+    
+    fileprivate func parsePhone(phone: String) -> Int64 {
+        let regex = try! NSRegularExpression(pattern: "[\\+\\(\\)\\s?\\-]", options: NSRegularExpression.Options.caseInsensitive)
+        let range = NSMakeRange(0, phone.count)
+        var modString = regex.stringByReplacingMatches(in: phone, options: [], range: range, withTemplate: "")
+        modString.remove(at: modString.startIndex)
+        let parsedPhone = Int64(modString)
+        
+        if let parsedPhone = parsedPhone {
+            return parsedPhone
+        }
+        
+        return 0
+    }
+    
+    
 }
 
 extension CW: NSCopying {

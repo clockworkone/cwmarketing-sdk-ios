@@ -14,20 +14,20 @@ public struct CWStory: Codable, Equatable {
     }
     
     var _id: String
-    var type: Int64
+    public var type: Int64
     var isDisabled: Bool?
     var isDeleted: Bool?
     var order: Int64
-    var name: String?
-    var title: String?
-    var subtitle: String?
-    var preview: CWImage
-    var slides: [CWImage]
+    public var name: String?
+    public var title: String?
+    public var subtitle: String?
+    public var preview: CWImage
+    public var slides: [CWImage]
 }
 
 public struct CWImage: Codable {
-    var body: String
-    var hash: String?
+    public var body: String
+    public var hash: String?
 }
 
 public struct CWStoryRequest: Codable {
