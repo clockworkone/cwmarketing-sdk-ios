@@ -11,3 +11,9 @@ public struct CWDetail: Codable {
     public var msg: String
     public var type: String
 }
+
+public enum CWSex: Codable {
+    case male
+    case female
+    case notSpecified
+}

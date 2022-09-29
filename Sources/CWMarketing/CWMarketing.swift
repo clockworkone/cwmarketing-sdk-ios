@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.4"
+let version = "0.0.5"
 let uri = "https://customer.api.cw.marketing"
 
 public final class CW {
@@ -23,18 +23,14 @@ public final class CW {
         return instance
     }()
     
+    private let coreDataManager: CWCoreDataManager
     private var headers = HTTPHeaders()
     private var config = CWConfig()
     private var imageCache: ImageRequestCache?
     private var downloader: ImageDownloader?
     private let queue = DispatchQueue(label: "marketing.cw.queue", attributes: .concurrent)
     private var cart: [String: [CWProduct]] = [:]
-    private var token: String = "" {
-        didSet {
-            headers.add(name: "Authorization", value: "Bearer: \(token)")
-//            updateToken(token: token)
-        }
-    }
+    private var token: String = ""
     
     weak var delegate: CWDelegate?
     var delegates: [CWDelegate] = []
@@ -42,13 +38,27 @@ public final class CW {
     /// Creates an instance from a config.
     ///
     public init() {
+        coreDataManager = CWCoreDataManager()
+        
+        do {
+            let user = try coreDataManager.user()
+            if let token = user.token, token != "" {
+                self.headers.add(name: "Authorization", value: "Bearer \(token)")
+                self.token = token
+            }
+        } catch {
+            os_log("can't get the access_token: %@", type: .info, error.localizedDescription)
+        }
+        
         let applicationDocumentsDirectory: URL = {
             let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
             return urls[urls.count-1]
         }()
-        
         os_log("coreData dir: %@", type: .info, applicationDocumentsDirectory.description)
+        
+        os_log("CWMarketing loaded version: %@", type: .info, version)
     }
+
     
     /// Set config.
     ///
@@ -79,6 +89,13 @@ public final class CW {
                 case .success(let val):
                     if let token = val.access_token {
                         self.token = token
+                        self.headers.add(name: "Authorization", value: "Bearer: \(token)")
+                        
+                        do {
+                            try self.updateToken(token: token)
+                        } catch {
+                            os_log("can't update the access_token: %@", type: .error, error.localizedDescription)
+                        }
                     }
                     completion(val, nil)
                 case .failure(let err):
@@ -87,8 +104,18 @@ public final class CW {
             }
     }
     
-    public func signup() {
-        
+    public func signup(request params: CWSignupRequest, completion: @escaping(CWSignupResponse?, NSError?) -> Void) {
+        AF.request("\(uri)/auth/v1/signup", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWSignupResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    print(val)
+                    completion(nil, nil)
+                case .failure(let err):
+                    completion(nil, err as NSError)
+                }
+            }
     }
     
     public func requestCode(phone: String, completion: @escaping(CWCodeReponse?, NSError?) -> Void) {
@@ -324,7 +351,7 @@ public final class CW {
                     if let data = val.data {
                         completion(data, nil)
                     }
-
+                    
                 case .failure(let err):
                     debugPrint(err)
                     completion([], err as NSError)
@@ -343,7 +370,7 @@ public final class CW {
                     if let data = val.data {
                         completion(data, nil)
                     }
-
+                    
                 case .failure(let err):
                     debugPrint(err)
                     completion([], err as NSError)
@@ -443,87 +470,12 @@ public final class CW {
     }
     
     // MARK: - CoreData methods
-    fileprivate func updateToken(token: String) {
-        let fetchRequest: NSFetchRequest<CWDUser> = CWDUser.fetchRequest()
-        
-        do {
-            let users = try persistentContainer.viewContext.fetch(fetchRequest)
-            var user: CWDUser
-            
-            if let existing = users.first {
-                user = existing
-            } else {
-                user = NSEntityDescription.insertNewObject(forEntityName: "CWDUser", into: persistentContainer.viewContext) as! CWDUser
-            }
-            
-            user.token = token
-        } catch let error as NSError {
-            os_log("can't fetch the user from coreData: %@", type: .error, error.localizedDescription)
-        }
-        
-        do {
-            try persistentContainer.viewContext.save()
-        } catch let error as NSError {
-            os_log("can't save the access_token to coreData: %@", type: .error, error.localizedDescription)
-        }
-        
+    fileprivate func updateToken(token: String) throws {
+        let user = try coreDataManager.user()
+        user.setValue(token, forKey: "token")
+        try coreDataManager.save()
     }
     
-    // MARK: - Core Data stack
-    lazy var persistentContainer: NSPersistentContainer = {
-//        let frameworkBundle = Bundle(for: type(of: self))
-//        print(frameworkBundle.bundleIdentifier)
-//        guard let modelURL = frameworkBundle.url(forResource: "CWData", withExtension: "xcdatamodel") else {
-//
-//            fatalError("Unable to load persistent stores")
-//        }
-//        let managedObjectModel =  NSManagedObjectModel(contentsOf: modelURL)
-//
-//        let container = NSPersistentContainer(name: "CWData", managedObjectModel: managedObjectModel!)
-//        container.loadPersistentStores { storeDescription, error in
-//            if let error = error {
-//                fatalError("Unable to load persistent stores: \(error)")
-//            }
-//        }
-//
-        let container = NSPersistentContainer(name: "CWData")
-        
-        debugPrint(container)
-        
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                
-                /*
-                 Typical reasons for an error here include:
-                 * The parent directory does not exist, cannot be created, or disallows writing.
-                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-                 * The device is out of space.
-                 * The store could not be migrated to the current model version.
-                 Check the error message to determine what the actual problem was.
-                 */
-                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-        })
-        
-        return container
-    }()
-    
-    // MARK: - Core Data Saving support
-    func saveContext () {
-        let context = persistentContainer.viewContext
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nserror = error as NSError
-                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-            }
-        }
-    }
 }
 
 extension CW: NSCopying {
