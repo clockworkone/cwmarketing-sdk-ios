@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CWDetail: Codable {
-    var msg: String
-    var type: String
+public struct CWDetail: Codable {
+    public var msg: String
+    public var type: String
 }

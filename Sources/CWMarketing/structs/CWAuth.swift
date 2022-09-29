@@ -12,10 +12,13 @@ struct CWAuthRequest: Codable {
     var code: String?
 }
 
-
+public struct CWAuthResponse: Codable {
+    public var access_token: String?
+    public var detail: CWDetail?
+}
 
 public struct CWCodeReponse: Codable {
-    var message: String
-    var isRegistered: Bool
-    var detail: CWDetail?
+    public var message: String
+    public var isRegistered: Bool
+    public var detail: CWDetail?
 }

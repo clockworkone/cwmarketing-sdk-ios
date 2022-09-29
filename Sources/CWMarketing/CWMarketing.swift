@@ -10,8 +10,10 @@ import Alamofire
 import AlamofireImage
 import UIKit
 import CryptoKit
+import os.log
+import CoreData
 
-let version = "0.0.3"
+let version = "0.0.4"
 let uri = "https://customer.api.cw.marketing"
 
 public final class CW {
@@ -27,13 +29,26 @@ public final class CW {
     private var downloader: ImageDownloader?
     private let queue = DispatchQueue(label: "marketing.cw.queue", attributes: .concurrent)
     private var cart: [String: [CWProduct]] = [:]
+    private var token: String = "" {
+        didSet {
+            headers.add(name: "Authorization", value: "Bearer: \(token)")
+//            updateToken(token: token)
+        }
+    }
     
     weak var delegate: CWDelegate?
     var delegates: [CWDelegate] = []
     
     /// Creates an instance from a config.
     ///
-    public init() {}
+    public init() {
+        let applicationDocumentsDirectory: URL = {
+            let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+            return urls[urls.count-1]
+        }()
+        
+        os_log("coreData dir: %@", type: .info, applicationDocumentsDirectory.description)
+    }
     
     /// Set config.
     ///
@@ -54,14 +69,17 @@ public final class CW {
     }
     
     // MARK: - Auth
-    public func auth(phone: String, code: String, completion: @escaping(String?, NSError?) -> Void) {
+    public func auth(phone: String, code: String, completion: @escaping(CWAuthResponse?, NSError?) -> Void) {
         let params = CWAuthRequest(phone: parsePhone(phone: phone), code: code)
         
-        AF.request("\(uri)/auth/v1/token", method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/auth/v1/token", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
-            .responseString { resp in
+            .responseDecodable(of: CWAuthResponse.self) { resp in
                 switch resp.result {
                 case .success(let val):
+                    if let token = val.access_token {
+                        self.token = token
+                    }
                     completion(val, nil)
                 case .failure(let err):
                     completion(nil, err as NSError)
@@ -76,7 +94,7 @@ public final class CW {
     public func requestCode(phone: String, completion: @escaping(CWCodeReponse?, NSError?) -> Void) {
         let params = CWAuthRequest(phone: parsePhone(phone: phone))
         
-        AF.request("\(uri)/auth/v1/code", method: .get, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/auth/v1/code", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWCodeReponse.self) { resp in
                 switch resp.result {
@@ -187,6 +205,12 @@ public final class CW {
         }
     }
     
+    public func getImage(concept: CWConcept, completion: @escaping (UIImage?) -> Void) {
+        getImage(id: concept._id, url: concept.image?.body) { image in
+            completion(image)
+        }
+    }
+    
     private func getImage(id: String, url: String?, completion: @escaping (UIImage?) -> Void) {
         guard let url = url, let urlRequest = prepareURLRequest(forPath: url, completion: completion), let imageCache = imageCache else { return }
         if let image = imageCache.image(for: urlRequest, withIdentifier: id) {
@@ -241,13 +265,13 @@ public final class CW {
     
     // MARK: - Menu
     
-    public func getMenu(conceptId concept: String? = nil, groupId group: String? = nil, terminalId terminal: String? = nil, page: Int64 = 1, completion: @escaping(CWMenu?, NSError?) -> Void) {
+    public func getMenu(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping(CWMenu?, NSError?) -> Void) {
         var menu = CWMenu()
         
         let menuGroup = DispatchGroup()
         
         menuGroup.enter()
-        getCategories(conceptId: concept, groupId: group, terminalId: terminal, page: page) { (categories, err) in
+        getCategories(concept: concept, groupId: group, terminal: terminal, page: page) { (categories, err) in
             if let err = err {
                 completion(nil, err)
             }
@@ -257,7 +281,7 @@ public final class CW {
         }
         
         menuGroup.enter()
-        getProducts(conceptId: concept, groupId: group, terminalId: terminal, page: page) { (products, err) in
+        getProducts(concept: concept, groupId: group, terminal: terminal, page: page) { (products, err) in
             if let err = err {
                 completion(nil, err)
             }
@@ -271,8 +295,8 @@ public final class CW {
         }
     }
     
-    public func getCategories(conceptId concept: String? = nil, groupId group: String? = nil, terminalId terminal: String? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept, groupId: group, terminalId: terminal, search: nil, limit: self.config.defaultLimitPerPage, page: page)
+    public func getCategories(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/categories/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -289,8 +313,8 @@ public final class CW {
             }
     }
     
-    public func getProducts(conceptId concept: String? = nil, groupId group: String? = nil, terminalId terminal: String? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept, groupId: group, terminalId: terminal, search: nil, limit: self.config.defaultLimitPerPage, page: page)
+    public func getProducts(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/products/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -418,7 +442,88 @@ public final class CW {
         return 0
     }
     
+    // MARK: - CoreData methods
+    fileprivate func updateToken(token: String) {
+        let fetchRequest: NSFetchRequest<CWDUser> = CWDUser.fetchRequest()
+        
+        do {
+            let users = try persistentContainer.viewContext.fetch(fetchRequest)
+            var user: CWDUser
+            
+            if let existing = users.first {
+                user = existing
+            } else {
+                user = NSEntityDescription.insertNewObject(forEntityName: "CWDUser", into: persistentContainer.viewContext) as! CWDUser
+            }
+            
+            user.token = token
+        } catch let error as NSError {
+            os_log("can't fetch the user from coreData: %@", type: .error, error.localizedDescription)
+        }
+        
+        do {
+            try persistentContainer.viewContext.save()
+        } catch let error as NSError {
+            os_log("can't save the access_token to coreData: %@", type: .error, error.localizedDescription)
+        }
+        
+    }
     
+    // MARK: - Core Data stack
+    lazy var persistentContainer: NSPersistentContainer = {
+//        let frameworkBundle = Bundle(for: type(of: self))
+//        print(frameworkBundle.bundleIdentifier)
+//        guard let modelURL = frameworkBundle.url(forResource: "CWData", withExtension: "xcdatamodel") else {
+//
+//            fatalError("Unable to load persistent stores")
+//        }
+//        let managedObjectModel =  NSManagedObjectModel(contentsOf: modelURL)
+//
+//        let container = NSPersistentContainer(name: "CWData", managedObjectModel: managedObjectModel!)
+//        container.loadPersistentStores { storeDescription, error in
+//            if let error = error {
+//                fatalError("Unable to load persistent stores: \(error)")
+//            }
+//        }
+//
+        let container = NSPersistentContainer(name: "CWData")
+        
+        debugPrint(container)
+        
+        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
+            if let error = error as NSError? {
+                // Replace this implementation with code to handle the error appropriately.
+                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                
+                /*
+                 Typical reasons for an error here include:
+                 * The parent directory does not exist, cannot be created, or disallows writing.
+                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
+                 * The device is out of space.
+                 * The store could not be migrated to the current model version.
+                 Check the error message to determine what the actual problem was.
+                 */
+                fatalError("Unresolved error \(error), \(error.userInfo)")
+            }
+        })
+        
+        return container
+    }()
+    
+    // MARK: - Core Data Saving support
+    func saveContext () {
+        let context = persistentContainer.viewContext
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                // Replace this implementation with code to handle the error appropriately.
+                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+                let nserror = error as NSError
+                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
+            }
+        }
+    }
 }
 
 extension CW: NSCopying {
