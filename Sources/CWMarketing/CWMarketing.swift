@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.5"
+let version = "0.0.6"
 let uri = "https://customer.api.cw.marketing"
 
 public final class CW {
@@ -32,8 +32,8 @@ public final class CW {
     private var cart: [String: [CWProduct]] = [:]
     private var token: String = ""
     
-    weak var delegate: CWDelegate?
-    var delegates: [CWDelegate] = []
+    public weak var delegate: CWMarketingDelegate?
+    public var delegates: [CWMarketingDelegate] = []
     
     /// Creates an instance from a config.
     ///
@@ -134,6 +134,12 @@ public final class CW {
     }
     
     // MARK: - Cart
+    private func initCart(concepts: [CWConcept]) {
+        for concept in concepts {
+            self.cart[concept._id] = []
+        }
+    }
+    
     public func getCart(concept: CWConcept) -> [CWProduct] {
         var cart: [CWProduct] = []
         queue.sync {
@@ -145,7 +151,7 @@ public final class CW {
     }
     
     public func wipeCart(concept: CWConcept) {
-        self.cart = [:]
+        self.cart[concept._id] = []
         delegates.forEach { delegate in
             delegate.wipeCart()
             delegate.totalDidUpdate(total: 0.0)
@@ -155,12 +161,13 @@ public final class CW {
     public func addToCart(product: CWProduct, modifiers: [CWModifier] = [], amount: Float = 1.0) {
         let conceptId = product.conceptId
         var p = product
+        guard var cart = self.cart[conceptId] else { return }
         
         queue.async(flags: .barrier) {
-            guard var cart = self.cart[conceptId] else { return }
             if let index = cart.firstIndex(where: { $0.productHash == self.productHash(product: p, modifiers: modifiers) }) {
                 if var count = cart[index].count {
                     count += amount
+                    cart[index].count = count
                 }
             } else {
                 p.count = amount
@@ -168,10 +175,35 @@ public final class CW {
                 p.productHash = self.productHash(product: product, modifiers: modifiers)
                 cart.append(p)
             }
+            
+            self.cart[conceptId] = cart
         }
         
         delegates.forEach { delegate in
             delegate.addToCart(product: p)
+            delegate.totalDidUpdate(total: self.getTotal(conceptId: conceptId))
+        }
+    }
+    
+    public func removeFromCart(product: CWProduct, modifiers: [CWModifier] = [], amount: Float = 1.0) {
+        let conceptId = product.conceptId
+        guard var cart = self.cart[conceptId] else { return }
+        
+        queue.async(flags: .barrier) {
+            if let index = cart.firstIndex(where: { $0.productHash == product.productHash }) {
+                if var count = cart[index].count, count > amount {
+                    count -= amount
+                    cart[index].count = count
+                } else {
+                    cart.remove(at: index)
+                }
+            }
+            
+            self.cart[conceptId] = cart
+        }
+        
+        delegates.forEach { delegate in
+            delegate.removeFromCart(product: product)
             delegate.totalDidUpdate(total: self.getTotal(conceptId: conceptId))
         }
     }
@@ -183,6 +215,8 @@ public final class CW {
             if let index = cart.firstIndex(where: { $0.productHash == product.productHash }) {
                 cart.remove(at: index)
             }
+            
+            self.cart[conceptId] = cart
         }
         
         delegates.forEach { delegate in
@@ -420,6 +454,7 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
+                        self.initCart(concepts: data)
                         completion(data, nil)
                     }
                     

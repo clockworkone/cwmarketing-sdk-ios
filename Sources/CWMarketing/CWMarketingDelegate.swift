@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol CWDelegate: AnyObject {
+public protocol CWMarketingDelegate: AnyObject {
     
     func addToCart(product: CWProduct)
     func removeFromCart(product: CWProduct)
@@ -17,8 +17,8 @@ protocol CWDelegate: AnyObject {
     
 }
 
-extension CWDelegate {
-    func wipeCart() {}
-    func removeEntireFromCart(product: CWProduct) {}
-    func totalDidUpdate(total: Float) {}
+extension CWMarketingDelegate {
+    public func wipeCart() {}
+    public func removeEntireFromCart(product: CWProduct) {}
+    public func totalDidUpdate(total: Float) {}
 }
