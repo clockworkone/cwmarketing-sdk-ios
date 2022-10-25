@@ -8,7 +8,7 @@
 import Foundation
 
 public struct CWConcept: Codable {
-    var _id: String
+    public var _id: String
     public var name: String
     public var comment: String?
     public var image: CWImage?

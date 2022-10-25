@@ -8,7 +8,7 @@
 import Foundation
 
 public struct CWTerminal: Codable {
-    var _id: String
+    public var _id: String
     var externalId: String?
     var organization: String?
     var address: String
