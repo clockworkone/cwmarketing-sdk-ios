@@ -14,7 +14,7 @@ import os.log
 import CoreData
 
 let version = "0.0.6"
-let uri = "https://customer.api.cw.marketing"
+let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
     
