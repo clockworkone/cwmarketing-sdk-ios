@@ -359,7 +359,7 @@ public final class CW {
     public func getCategories(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
         let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/v1/categories", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/categories/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWCategoryResponse.self) { resp in
                 switch resp.result {
