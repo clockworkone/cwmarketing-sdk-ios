@@ -82,7 +82,7 @@ public final class CW {
     public func auth(phone: String, code: String, completion: @escaping(CWAuthResponse?, NSError?) -> Void) {
         let params = CWAuthRequest(phone: parsePhone(phone: phone), code: code)
         
-        AF.request("\(uri)/auth/v1/token", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/auth/token", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWAuthResponse.self) { resp in
                 switch resp.result {
@@ -105,7 +105,7 @@ public final class CW {
     }
     
     public func signup(request params: CWSignupRequest, completion: @escaping(CWSignupResponse?, NSError?) -> Void) {
-        AF.request("\(uri)/auth/v1/signup", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/auth/signup", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWSignupResponse.self) { resp in
                 switch resp.result {
@@ -121,7 +121,7 @@ public final class CW {
     public func requestCode(phone: String, completion: @escaping(CWCodeReponse?, NSError?) -> Void) {
         let params = CWAuthRequest(phone: parsePhone(phone: phone))
         
-        AF.request("\(uri)/auth/v1/code", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/auth/code", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWCodeReponse.self) { resp in
                 switch resp.result {
@@ -310,7 +310,7 @@ public final class CW {
     public func getStories(conceptId concept: String? = nil, page: Int64 = 1, completion: @escaping([CWStory], NSError?) -> Void) {
         let params = CWStoryRequest(conceptId: concept, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/stories/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/stories", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWStoryResponse.self) { resp in
                 switch resp.result {
@@ -359,7 +359,7 @@ public final class CW {
     public func getCategories(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
         let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/categories/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/categories", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWCategoryResponse.self) { resp in
                 switch resp.result {
@@ -377,7 +377,7 @@ public final class CW {
     public func getProducts(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
         let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/products/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProductResponse.self) { resp in
                 switch resp.result {
@@ -396,7 +396,7 @@ public final class CW {
     public func getFavorites(conceptId concept: String, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
         let params = CWFavoriteRequest(conceptId: concept, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/favorite/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/favorite/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProductResponse.self) { resp in
                 switch resp.result {
@@ -415,7 +415,7 @@ public final class CW {
     public func addFavorite(product: CWProduct, completion: @escaping(NSError?) -> Void) {
         let params = CWFavoriteRequest(conceptId: product.conceptId, productCode: product.code)
         
-        AF.request("\(uri)/favorite/v1/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/favorite/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .response() { resp in
                 switch resp.result {
@@ -431,7 +431,7 @@ public final class CW {
     public func deleteFavorite(product: CWProduct, completion: @escaping(NSError?) -> Void) {
         let params = CWFavoriteRequest(conceptId: product.conceptId, productCode: product.code)
         
-        AF.request("\(uri)/favorite/v1/", method: .delete, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/favorite/", method: .delete, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .response() { resp in
                 switch resp.result {
@@ -448,7 +448,7 @@ public final class CW {
     public func getConcepts(page: Int64 = 1, completion: @escaping([CWConcept], NSError?) -> Void) {
         let params = CWConceptRequest(limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/concepts/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/concepts/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWConceptResponse.self) { resp in
                 switch resp.result {
@@ -468,7 +468,7 @@ public final class CW {
     public func getTerminals(page: Int64 = 1, completion: @escaping([CWTerminal], NSError?) -> Void) {
         let params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/terminals/v1/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/terminals/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWTerminalResponse.self) { resp in
                 switch resp.result {
