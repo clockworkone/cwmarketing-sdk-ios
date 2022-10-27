@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.11"
+let version = "0.0.12"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -351,6 +351,16 @@ public final class CW {
             menuGroup.leave()
         }
         
+        menuGroup.enter()
+        getFeatured(concept: concept, groupId: group, terminal: terminal, page: page) { (products, err) in
+            if let err = err {
+                completion(nil, err)
+            }
+            
+            menu.featured = products
+            menuGroup.leave()
+        }
+        
         menuGroup.notify(queue: .main) {
             completion(menu, nil)
         }
@@ -484,8 +494,8 @@ public final class CW {
     }
     
     // MARK: - Featured products in card
-    public func getFeatured(page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
-        let params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
+    public func getFeatured(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/featured_products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
