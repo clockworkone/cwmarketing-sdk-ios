@@ -140,6 +140,13 @@ public struct CWBadge: Codable {
     var isDisabled: Bool
 }
 
+public struct CWFeatured: Codable {
+    var _id: String
+    var companyId: String
+    var conceptId: String
+    public var products: [CWProduct]
+}
+
 struct CWMenuRequest: Codable {
     var conceptId: String?
     var groupId: String?
@@ -164,5 +171,14 @@ struct CWProductResponse: Codable {
     var pages: Int64?
     var count: Int64?
     var data: [CWProduct]?
+    var detail: String?
+}
+
+struct CWFeaturedResponse: Codable {
+    var limit: Int64?
+    var page: Int64?
+    var pages: Int64?
+    var count: Int64?
+    var data: [CWFeatured]?
     var detail: String?
 }

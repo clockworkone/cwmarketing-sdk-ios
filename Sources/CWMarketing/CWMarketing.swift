@@ -352,12 +352,14 @@ public final class CW {
         }
         
         menuGroup.enter()
-        getFeatured(concept: concept, groupId: group, terminal: terminal, page: page) { (products, err) in
+        getFeatured(concept: concept) { (featured, err) in
             if let err = err {
                 completion(nil, err)
             }
             
-            menu.featured = products
+            if featured.count > 0 {
+                menu.featured = featured[0].products
+            }
             menuGroup.leave()
         }
         
@@ -494,12 +496,12 @@ public final class CW {
     }
     
     // MARK: - Featured products in card
-    public func getFeatured(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
+    public func getFeatured(concept: CWConcept? = nil, completion: @escaping([CWFeatured], NSError?) -> Void) {
+        let params = CWMenuRequest(conceptId: concept?._id)
         
         AF.request("\(uri)/v1/featured_products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
-            .responseDecodable(of: CWProductResponse.self) { resp in
+            .responseDecodable(of: CWFeaturedResponse.self) { resp in
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
