@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.6"
+let version = "0.0.11"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -478,6 +478,26 @@ public final class CW {
                     }
                     
                 case .failure(let err):
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    // MARK: - Featured products in card
+    public func getFeatured(page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
+        let params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
+        
+        AF.request("\(uri)/v1/featured_products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWProductResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                    
+                case .failure(let err):
+                    debugPrint(err)
                     completion([], err as NSError)
                 }
             }
