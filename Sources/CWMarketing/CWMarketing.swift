@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.12"
+let version = "0.0.13"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -352,11 +352,11 @@ public final class CW {
         }
         
         menuGroup.enter()
-        getFeatured(concept: concept) { (featured, err) in
+        getFeatured(concept: concept, page: page) { (featured, err) in
             if let err = err {
                 completion(nil, err)
             }
-            
+
             if featured.count > 0 {
                 menu.featured = featured[0].products
             }
@@ -496,8 +496,8 @@ public final class CW {
     }
     
     // MARK: - Featured products in card
-    public func getFeatured(concept: CWConcept? = nil, completion: @escaping([CWFeatured], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept?._id)
+    public func getFeatured(concept: CWConcept? = nil, page: Int64 = 1, completion: @escaping([CWFeatured], NSError?) -> Void) {
+        let params = CWFeaturedRequest(conceptId: concept?._id, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/featured_products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -506,6 +506,10 @@ public final class CW {
                 case .success(let val):
                     if let data = val.data {
                         completion(data, nil)
+                    }
+                    
+                    if let detail = val.detail {
+                        completion([], NSError(domain: "CWMarketing", code: 1000, userInfo: ["detail": detail]))
                     }
                     
                 case .failure(let err):

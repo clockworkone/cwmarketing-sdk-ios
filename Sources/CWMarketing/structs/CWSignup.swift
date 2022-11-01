@@ -14,7 +14,7 @@ public struct CWSignup: Codable {
 public struct CWSignupRequest: Codable {
     public var firstName: String
     public var lastName: String
-    public var email: String
+    public var email: String?
     public var sex: CWSex
     public var dob: Date
     
@@ -41,7 +41,7 @@ public struct CWSignupRequest: Codable {
         try container.encode(dobString, forKey: .dob)
     }
     
-    public init(firstName: String, lastName: String, email: String, sex: CWSex, dob: Date) {
+    public init(firstName: String, lastName: String, email: String?, sex: CWSex, dob: Date) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email

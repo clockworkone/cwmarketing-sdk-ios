@@ -30,7 +30,7 @@ public struct CWCategory: Codable {
     var companyId: String
     var conceptId: String
     var terminalId: String
-    public var order: Int64
+    public var order: Int64?
     var slug: String?
     var source: String?
     var isHidden: Bool
@@ -63,7 +63,7 @@ public struct CWProduct: Codable {
     var companyId: String
     var conceptId: String
     var terminalId: String
-    public var order: Int64
+    public var order: Int64?
     var slug: String?
     var source: String?
     var isHidden: Bool
@@ -102,7 +102,7 @@ public struct CWModifier: Codable {
     var name: String
     var externalId: String?
     var terminalId: String
-    var order: Int64
+    var order: Int64?
     var image: CWImage?
     var source: String?
     var maxAmount: Float
@@ -118,7 +118,7 @@ public struct CWOptions: Codable {
     var name: String
     var externalId: String?
     var terminalId: String
-    var order: Int64
+    var order: Int64?
     var image: CWImage?
     var source: String?
     var maxAmount: Float
@@ -133,15 +133,14 @@ public struct CWBadge: Codable {
     var _id: String
     var name: String
     var image: CWImage?
-    var order: Int64
-    var companyId: String
+    var order: Int64?
+    var companyId: String?
     var conceptId: String
     var isHidden: Bool
     var isDisabled: Bool
 }
 
 public struct CWFeatured: Codable {
-    var _id: String
     var companyId: String
     var conceptId: String
     public var products: [CWProduct]
@@ -152,6 +151,12 @@ struct CWMenuRequest: Codable {
     var groupId: String?
     var terminalId: String?
     var search: String?
+    var limit: Int64?
+    var page: Int64?
+}
+
+struct CWFeaturedRequest: Codable {
+    var conceptId: String?
     var limit: Int64?
     var page: Int64?
 }
