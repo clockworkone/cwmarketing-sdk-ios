@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.13"
+let version = "0.0.14"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
