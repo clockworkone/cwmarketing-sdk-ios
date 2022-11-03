@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.14"
+let version = "0.0.15"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -49,7 +49,7 @@ public final class CW {
         } catch {
             os_log("can't get the access_token: %@", type: .info, error.localizedDescription)
         }
-        
+
         let applicationDocumentsDirectory: URL = {
             let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
             return urls[urls.count-1]
@@ -94,7 +94,7 @@ public final class CW {
                         do {
                             try self.updateToken(token: token)
                         } catch {
-                            os_log("can't update the access_token: %@", type: .error, error.localizedDescription)
+                            completion(nil, error as NSError)
                         }
                     }
                     completion(val, nil)
@@ -110,8 +110,7 @@ public final class CW {
             .responseDecodable(of: CWSignupResponse.self) { resp in
                 switch resp.result {
                 case .success(let val):
-                    print(val)
-                    completion(nil, nil)
+                    completion(val, nil)
                 case .failure(let err):
                     completion(nil, err as NSError)
                 }
@@ -272,6 +271,18 @@ public final class CW {
         }
     }
     
+    public func getImage(notification: CWNotification, completion: @escaping (UIImage?) -> Void) {
+        getImage(id: notification._id, url: notification.image?.body) { image in
+            completion(image)
+        }
+    }
+    
+    public func getImage(content: CWContent, completion: @escaping (UIImage?) -> Void) {
+        getImage(id: content._id, url: content.image) { image in
+            completion(image)
+        }
+    }
+    
     private func getImage(id: String, url: String?, completion: @escaping (UIImage?) -> Void) {
         guard let url = url, let urlRequest = prepareURLRequest(forPath: url, completion: completion), let imageCache = imageCache else { return }
         if let image = imageCache.image(for: urlRequest, withIdentifier: id) {
@@ -299,6 +310,35 @@ public final class CW {
         return URLRequest(url: url)
     }
     
+    // MARK: - Profile
+    public func getProfile(completion: @escaping(CWProfile?, NSError?) -> Void) {
+//        do {
+//            let user = try self.coreDataManager.user()
+//            let profile = CWProfile(_id: user.id ?? "", firstName: user.firstName ?? "",
+//                                    lastName: user.lastName ?? "", phone: user.phone, sex: user.sex, card: user.card,
+//                                    wallet: CWWallet(auth: nil, card: user.wallet), balances: CWBalances(total: user.balance, categories: [], balances: []))
+//            completion(profile, nil)
+//        } catch {
+//            completion(nil, error as NSError)
+//        }
+
+        AF.request("\(uri)/v1/me/profile", method: .get, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWProfile.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    do {
+                        try self.updateProfile(profile: val)
+                    } catch {
+                        completion(nil, error as NSError)
+                    }
+                    completion(val, nil)
+                case .failure(let err):
+                    completion(nil, err as NSError)
+                }
+            }
+    }
+    
     // MARK: - Stories
     
     /// Get the stories by concept or all company's stories.
@@ -310,7 +350,7 @@ public final class CW {
     public func getStories(conceptId concept: String? = nil, page: Int64 = 1, completion: @escaping([CWStory], NSError?) -> Void) {
         let params = CWStoryRequest(conceptId: concept, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/v1/stories", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/stories/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWStoryResponse.self) { resp in
                 switch resp.result {
@@ -322,6 +362,50 @@ public final class CW {
                     completion([], err as NSError)
                 }
             }
+    }
+    
+    // MARK: - Notifications
+    public func getNotifications(page: Int64 = 1, completion: @escaping([CWNotification], NSError?) -> Void) {
+        let params = CWStoryRequest(limit: self.config.defaultLimitPerPage, page: page)
+
+        AF.request("\(uri)/v1/notifications/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWNotificationResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                case .failure(let err):
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    public func getNotificationBy(id: String, completion: @escaping(CWNotification?, NSError?) -> Void) {
+        completion(nil, nil)
+    }
+    
+    // MARK: - Contents
+    public func getContents(concept: CWConcept? = nil, page: Int64 = 1, completion: @escaping([CWContent], NSError?) -> Void) {
+        let params = CWStoryRequest(conceptId: concept?._id, limit: self.config.defaultLimitPerPage, page: page)
+
+        AF.request("\(uri)/v1/contents/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWContentResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                case .failure(let err):
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    public func getContentsBy(id: String, completion: @escaping(CWNotification?, NSError?) -> Void) {
+        completion(nil, nil)
     }
     
     // MARK: - Menu
@@ -543,7 +627,35 @@ public final class CW {
     // MARK: - CoreData methods
     fileprivate func updateToken(token: String) throws {
         let user = try coreDataManager.user()
+        
         user.setValue(token, forKey: "token")
+        
+        try coreDataManager.save()
+    }
+    
+    fileprivate func updateProfile(profile: CWProfile) throws {
+        var dobDate: NSDate?
+        
+        if let dob = profile.dob {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+            dobDate = dateFormatter.date(from: dob) as NSDate?
+        }
+        
+        let user = try coreDataManager.user()
+        
+        user.setValue(profile._id, forKey: "id")
+        user.setValue(profile.firstName, forKey: "firstName")
+        user.setValue(profile.lastName, forKey: "lastName")
+        user.setValue(profile.phone, forKey: "phone")
+        user.setValue(profile.email, forKey: "email")
+        user.setValue(profile.sex, forKey: "sex")
+        user.setValue(dobDate, forKey: "dob")
+        user.setValue(profile.card, forKey: "card")
+        user.setValue(profile.externalId, forKey: "externalId")
+        user.setValue(profile.wallet.card, forKey: "wallet")
+        user.setValue(profile.balances.total, forKey: "balance")
+        
         try coreDataManager.save()
     }
     

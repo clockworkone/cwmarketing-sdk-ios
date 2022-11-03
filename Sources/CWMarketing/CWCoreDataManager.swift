@@ -29,6 +29,16 @@ class CWCoreDataManager: NSPersistentContainer {
         }
     }
     
+    lazy var persistentContainer: NSPersistentContainer = {
+        let container = NSPersistentContainer(name: "CWData")
+        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
+            if let error = error as NSError? {
+                fatalError("Unresolved error \(error), \(error.userInfo)")
+            }
+        })
+        return container
+    }()
+    
     func user() throws -> CWDUser {
         let fetchRequest = NSFetchRequest<CWDUser>(entityName: "CWDUser")
         guard let user = try self.viewContext.fetch(fetchRequest).first else {
