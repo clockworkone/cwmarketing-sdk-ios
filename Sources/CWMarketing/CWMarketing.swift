@@ -78,6 +78,16 @@ public final class CW {
         }
     }
     
+    // MARK: - Check auth
+    public func checkToken() throws -> String {
+        do {
+            let user = try self.coreDataManager.user()
+            return user.token ?? "empty token"
+        } catch {
+            throw error
+        }
+    }
+    
     // MARK: - Auth
     public func auth(phone: String, code: String, completion: @escaping(CWAuthResponse?, NSError?) -> Void) {
         let params = CWAuthRequest(phone: parsePhone(phone: phone), code: code)
