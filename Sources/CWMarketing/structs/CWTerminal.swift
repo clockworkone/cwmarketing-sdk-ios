@@ -11,10 +11,10 @@ public struct CWTerminal: Codable {
     public var _id: String
     var externalId: String?
     var organization: String?
-    var address: String
-    var city: String
-    var timezone: String
-    var delivery: String?
+    public var address: String
+    public var city: String
+    public var timezone: String
+    public var delivery: String?
 }
 
 struct CWTerminalRequest: Codable {

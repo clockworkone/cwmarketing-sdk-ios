@@ -48,6 +48,28 @@ class CWCoreDataManager: NSPersistentContainer {
         return user
     }
     
+    func addresses() throws -> [CWDAddress] {
+        let fetchRequest = NSFetchRequest<CWDAddress>(entityName: "CWDAddress")
+        let sort = NSSortDescriptor(key: #keyPath(CWDAddress.updatedAt), ascending: false)
+        fetchRequest.sortDescriptors = [sort]
+        
+        return try self.viewContext.fetch(fetchRequest) as [CWDAddress]
+    }
+    
+    func newAddress() -> CWDAddress {
+        return NSEntityDescription.insertNewObject(forEntityName: "CWDAddress", into: self.viewContext) as! CWDAddress
+    }
+    
+    func deleteAddress(id: UUID) throws {
+        let fetchRequest = NSFetchRequest<CWDAddress>(entityName: "CWDAddress")
+        fetchRequest.predicate = NSPredicate(format: "id = %@", id.uuidString)
+        
+        guard let address = try self.viewContext.fetch(fetchRequest).first else { return }
+        
+        self.viewContext.delete(address)
+        try self.save()
+    }
+    
     func save() throws {
         if self.viewContext.hasChanges {
             do {

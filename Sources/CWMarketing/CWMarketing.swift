@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.15"
+let version = "0.0.17"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -344,9 +344,52 @@ public final class CW {
                     }
                     completion(val, nil)
                 case .failure(let err):
+                    
                     completion(nil, err as NSError)
                 }
             }
+    }
+    
+    // MARK: - Address
+    public func getAddresses() throws -> [CWAddress] {
+        do {
+            let addresses = try self.coreDataManager.addresses()
+            var cwaddresses: [CWAddress] = []
+            
+            for a in addresses {
+                if let id = a.id, let city = a.city, let street = a.street, let home = a.home {
+                    cwaddresses.append(CWAddress(_id: a.externalId ?? "", id: id, city: city, street: street, home: home, flat: a.flat, floor: a.floor, entrance: a.entrance))
+                }
+            }
+            
+            return cwaddresses
+        } catch {
+            throw error
+        }
+    }
+    
+    public func addAddress(address: CWAddress) throws {
+        let a = coreDataManager.newAddress()
+        
+        a.setValue(UUID(), forKey: "id")
+        a.setValue(address.city, forKey: "city")
+        a.setValue(address.street, forKey: "street")
+        a.setValue(address.home, forKey: "home")
+        a.setValue(address.flat, forKey: "flat")
+        a.setValue(address.floor, forKey: "floor")
+        a.setValue(address.entrance, forKey: "entrance")
+        a.setValue(Date(), forKey: "createdAt")
+        a.setValue(Date(), forKey: "updatedAt")
+        
+        try coreDataManager.save()
+    }
+    
+    public func updateAddress(address: CWAddress) {
+        
+    }
+    
+    public func deleteAddress(id: UUID) throws {
+        try coreDataManager.deleteAddress(id: id)
     }
     
     // MARK: - Stories
