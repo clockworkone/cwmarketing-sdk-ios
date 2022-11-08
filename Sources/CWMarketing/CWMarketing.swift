@@ -263,7 +263,6 @@ public final class CW {
     }
     
     // MARK: - Images
-    
     public func getImage(badge: CWBadge, completion: @escaping (UIImage?) -> Void) {
         getImage(id: badge._id, url: badge.image?.body) { image in
             completion(image)
@@ -482,7 +481,6 @@ public final class CW {
     }
     
     // MARK: - Menu
-    
     public func getMenu(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping(CWMenu?, NSError?) -> Void) {
         var menu = CWMenu()
         
@@ -702,6 +700,24 @@ public final class CW {
     
     public func getOrderBy(id: String) {
         
+    }
+    
+    public func deliveryCheck(concept: CWConcept, address: CWAddress, completion: @escaping(CWDeliveryCheck?, NSError?) -> Void) {
+        let params = CWDeliveryCheckRequest(conceptId: concept._id, address: CWDeliveryCheckAddress(city: address.city, street: address.street, home: address.home))
+        
+        AF.request("\(uri)/v1/delivery/check/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWDeliveryCheck.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("deliveryCheck error response: %@", type: .error, errResp)
+                    }
+                    completion(nil, err as NSError)
+                }
+            }
     }
     
     public func send(order: CWOrder, completion: @escaping(Bool, NSError?) -> Void) {
