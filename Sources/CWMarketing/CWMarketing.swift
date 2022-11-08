@@ -777,6 +777,35 @@ public final class CW {
             }
     }
     
+    // MARK: - Support
+    public func send(support: CWSupport, completion: @escaping(Bool, NSError?) -> Void) {
+        var supportRequest = support
+    
+        do {
+            let user = try coreDataManager.user()
+            if let id = user.id {
+                supportRequest.customerId = id
+            }
+        } catch {
+            os_log("cant get user id from core data: %@", type: .error, error.localizedDescription)
+        }
+        
+        AF.request("\(uri)/v1/supports/", method: .post, parameters: supportRequest, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWDeliveryCheck.self) { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(true, nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("send support error response: %@", type: .error, errResp)
+                    }
+                    completion(false, err as NSError)
+                }
+            }
+    }
+    
+    
     // MARK: - Private methods
     fileprivate func productHash(product: CWProduct, modifiers: [CWModifier]) -> String {
         let mString = "\(product._id)\(modifiers.map { $0.options.map { $0.name }.joined() }.joined())"
