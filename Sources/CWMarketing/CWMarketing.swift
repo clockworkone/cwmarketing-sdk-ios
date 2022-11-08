@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.17"
+let version = "0.0.18"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -35,7 +35,7 @@ public final class CW {
     public weak var delegate: CWMarketingDelegate?
     public var delegates: [CWMarketingDelegate] = []
     
-    /// Creates an instance from a config.
+    /// Creates an instance
     ///
     public init() {
         coreDataManager = CWCoreDataManager()
@@ -49,12 +49,6 @@ public final class CW {
         } catch {
             os_log("can't get the access_token: %@", type: .info, error.localizedDescription)
         }
-
-        let applicationDocumentsDirectory: URL = {
-            let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-            return urls[urls.count-1]
-        }()
-        os_log("coreData dir: %@", type: .info, applicationDocumentsDirectory.description)
         
         os_log("CWMarketing loaded version: %@", type: .info, version)
     }
@@ -68,6 +62,10 @@ public final class CW {
         self.config = config
         headers.add(name: "Company-Access-Key", value: config.apiKey)
         headers.add(name: "Loyalaty-Id", value: config.loyaltyId)
+        
+        if let source = config.source {
+            headers.add(name: "Source-Id", value: source)
+        }
         
         if let cacheRules = config.cacheRules {
             imageCache = AutoPurgingImageCache(memoryCapacity: cacheRules.memoryCapacity, preferredMemoryUsageAfterPurge: cacheRules.usageAfterPurge)
@@ -344,7 +342,9 @@ public final class CW {
                     }
                     completion(val, nil)
                 case .failure(let err):
-                    
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProfile response: %@", type: .error, errResp)
+                    }
                     completion(nil, err as NSError)
                 }
             }
@@ -358,7 +358,7 @@ public final class CW {
             
             for a in addresses {
                 if let id = a.id, let city = a.city, let street = a.street, let home = a.home {
-                    cwaddresses.append(CWAddress(_id: a.externalId ?? "", id: id, city: city, street: street, home: home, flat: a.flat, floor: a.floor, entrance: a.entrance))
+                    cwaddresses.append(CWAddress(_id: a.externalId ?? "", id: id, city: city, street: street, home: home, flat: a.flat, floor: a.floor, entrance: a.entrance, lat: a.lat, lon: a.lon))
                 }
             }
             
@@ -378,6 +378,8 @@ public final class CW {
         a.setValue(address.flat, forKey: "flat")
         a.setValue(address.floor, forKey: "floor")
         a.setValue(address.entrance, forKey: "entrance")
+        a.setValue(address.lat, forKey: "lat")
+        a.setValue(address.lon, forKey: "lon")
         a.setValue(Date(), forKey: "createdAt")
         a.setValue(Date(), forKey: "updatedAt")
         
@@ -651,6 +653,72 @@ public final class CW {
                     
                 case .failure(let err):
                     debugPrint(err)
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    // MARK: - Order
+    public func getOrders() {
+        
+    }
+    
+    public func getOrderBy(id: String) {
+        
+    }
+    
+    public func send(order: CWOrder, completion: @escaping(Bool, NSError?) -> Void) {
+        var o = CWOrderRequest(companyId: config.companyId, sourceId: config.source ?? "")
+        o.prepare(order: order)
+        
+        AF.request("\(uri)/v1/orders/order", method: .post, parameters: o, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWOrderResponse.self) { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(true, nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("send order error response: %@", type: .error, errResp)
+                    }
+                    completion(false, err as NSError)
+                }
+            }
+    }
+    
+    public func getPaymentTypes(concept: CWConcept, completion: @escaping([CWPaymentType], NSError?) -> Void) {
+        let params = CWPaymentTypeRequest(conceptId: concept._id)
+        
+        AF.request("\(uri)/v1/payments_types/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: [CWPaymentType].self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                    
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getPaymentTypes error response: %@", type: .error, errResp)
+                    }
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
+    public func getDeliveryTypes(concept: CWConcept, completion: @escaping([CWDeliveryType], NSError?) -> Void) {
+        let params = CWDeliveryTypeRequest(conceptId: concept._id)
+        
+        AF.request("\(uri)/v1/delivery_types/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: [CWDeliveryType].self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                    
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getDeliveryTypes error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }

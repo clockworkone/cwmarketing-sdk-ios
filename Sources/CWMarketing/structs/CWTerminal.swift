@@ -9,12 +9,14 @@ import Foundation
 
 public struct CWTerminal: Codable {
     public var _id: String
-    var externalId: String?
-    var organization: String?
     public var address: String
     public var city: String
     public var timezone: String
     public var delivery: String?
+    var conceptId: String
+    var groupId: String
+    var companyId: String
+    var source: String?
 }
 
 struct CWTerminalRequest: Codable {

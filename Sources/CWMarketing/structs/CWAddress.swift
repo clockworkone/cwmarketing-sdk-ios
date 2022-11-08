@@ -16,6 +16,9 @@ public struct CWAddress: Codable {
     public var flat: Int64?
     public var floor: Int64?
     public var entrance: Int64?
+    public var lat: Float?
+    public var lon: Float?
+    
     
     public init() {
         self._id = ""
@@ -25,7 +28,7 @@ public struct CWAddress: Codable {
         self.home = ""
     }
     
-    public init(city: String, street: String, home: String, flat: Int64? = nil, floor: Int64? = nil, entrance: Int64? = nil) {
+    public init(city: String, street: String, home: String, flat: Int64? = nil, floor: Int64? = nil, entrance: Int64? = nil, lat: Float? = nil, lon: Float? = nil) {
         self._id = ""
         self.id = UUID()
         self.city = city
@@ -34,9 +37,11 @@ public struct CWAddress: Codable {
         self.flat = flat
         self.floor = floor
         self.entrance = entrance
+        self.lat = lat
+        self.lon = lon
     }
     
-    public init(_id: String, id: UUID, city: String, street: String, home: String, flat: Int64? = nil, floor: Int64? = nil, entrance: Int64? = nil) {
+    public init(_id: String, id: UUID, city: String, street: String, home: String, flat: Int64? = nil, floor: Int64? = nil, entrance: Int64? = nil, lat: Float? = nil, lon: Float? = nil) {
         self._id = _id
         self.id = id
         self.city = city
@@ -45,5 +50,7 @@ public struct CWAddress: Codable {
         self.flat = flat
         self.floor = floor
         self.entrance = entrance
+        self.lat = lat
+        self.lon = lon
     }
 }

@@ -10,6 +10,7 @@ import Foundation
 public struct CWConfig {
     var apiKey: String
     var loyaltyId: String
+    var companyId: String
     var timeout: Int64?
     var version: String?
     var defaultLimitPerPage: Int64
@@ -19,12 +20,14 @@ public struct CWConfig {
     init() {
         self.apiKey = ""
         self.loyaltyId = ""
+        self.companyId = ""
         self.defaultLimitPerPage = 25
     }
     
-    public init(apiKey: String, loyaltyId: String, defaultLimitPerPage: Int64 = 25, source: String? = nil, cacheRules: CWConfigImageCache = CWConfigImageCache()) {
+    public init(apiKey: String, loyaltyId: String, companyId: String, defaultLimitPerPage: Int64 = 25, source: String? = nil, cacheRules: CWConfigImageCache = CWConfigImageCache()) {
         self.apiKey = apiKey
         self.loyaltyId = loyaltyId
+        self.companyId = companyId
         self.defaultLimitPerPage = defaultLimitPerPage
         self.cacheRules = cacheRules
         self.source = source
