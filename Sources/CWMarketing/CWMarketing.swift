@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.18"
+let version = "0.0.19"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -107,6 +107,9 @@ public final class CW {
                     }
                     completion(val, nil)
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("auth error response: %@", type: .error, errResp)
+                    }
                     completion(nil, err as NSError)
                 }
             }
@@ -120,6 +123,9 @@ public final class CW {
                 case .success(let val):
                     completion(val, nil)
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("signup error response: %@", type: .error, errResp)
+                    }
                     completion(nil, err as NSError)
                 }
             }
@@ -135,6 +141,9 @@ public final class CW {
                 case .success(let val):
                     completion(val, nil)
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("requestCode error response: %@", type: .error, errResp)
+                    }
                     completion(nil, err as NSError)
                 }
             }
@@ -414,6 +423,9 @@ public final class CW {
                         completion(data, nil)
                     }
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getStories error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -432,6 +444,9 @@ public final class CW {
                         completion(data, nil)
                     }
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getNotifications error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -454,6 +469,9 @@ public final class CW {
                         completion(data, nil)
                     }
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getContents error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -520,6 +538,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getCategories error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -538,7 +559,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
-                    debugPrint(err)
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProducts error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -557,7 +580,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
-                    debugPrint(err)
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getFavorites error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -573,7 +598,9 @@ public final class CW {
                 case .success(_):
                     completion(nil)
                 case .failure(let err):
-                    debugPrint(err)
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("addFavorite error response: %@", type: .error, errResp)
+                    }
                     completion(err as NSError)
                 }
             }
@@ -589,7 +616,9 @@ public final class CW {
                 case .success(_):
                     completion(nil)
                 case .failure(let err):
-                    debugPrint(err)
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("deleteFavorite error response: %@", type: .error, errResp)
+                    }
                     completion(err as NSError)
                 }
             }
@@ -610,6 +639,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getConcepts error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -629,6 +661,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getTerminals error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }
@@ -652,7 +687,9 @@ public final class CW {
                     }
                     
                 case .failure(let err):
-                    debugPrint(err)
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getFeatured error response: %@", type: .error, errResp)
+                    }
                     completion([], err as NSError)
                 }
             }

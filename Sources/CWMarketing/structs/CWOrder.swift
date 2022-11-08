@@ -19,6 +19,20 @@ public struct CWOrder {
     public var withdrawBonuses: Float?
     public var comment: String?
     public var change: Float?
+    
+    public init(concept: CWConcept, terminal: CWTerminal? = nil, deliveryType: CWDeliveryType, personsCount: Int? = nil, paymentType: CWPaymentType, deliveryTime: Date? = nil, products: [CWProduct], address: CWAddress? = nil, withdrawBonuses: Float? = nil, comment: String? = nil, change: Float? = nil) {
+        self.concept = concept
+        self.terminal = terminal
+        self.deliveryType = deliveryType
+        self.personsCount = personsCount
+        self.paymentType = paymentType
+        self.deliveryTime = deliveryTime
+        self.products = products
+        self.address = address
+        self.withdrawBonuses = withdrawBonuses
+        self.comment = comment
+        self.change = change
+    }
 }
 
 
