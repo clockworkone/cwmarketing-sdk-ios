@@ -14,6 +14,8 @@
         <attribute name="street" attributeType="String"/>
         <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
+    <entity name="CWDCategories" representedClassName="CWDCategories" syncable="YES" codeGenerationType="class"/>
+    <entity name="CWDProducts" representedClassName="CWDProducts" syncable="YES" codeGenerationType="class"/>
     <entity name="CWDUser" representedClassName="CWDUser" syncable="YES" codeGenerationType="class">
         <attribute name="balance" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="card" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>

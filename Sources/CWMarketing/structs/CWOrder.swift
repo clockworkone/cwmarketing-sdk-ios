@@ -56,7 +56,7 @@ struct CWOrderRequest: Codable {
         self.sourceId = sourceId
         self.conceptId = ""
         self.deliveryTypeId = ""
-        self.personsCount = 0
+        self.personsCount = 1
         self.paymentTypeId = ""
         self.withdrawBonuses = 0
         self.comment = ""
@@ -95,6 +95,7 @@ extension CWOrderRequest {
         self.conceptId = order.concept._id
         self.deliveryTypeId = order.deliveryType._id
         self.paymentTypeId = order.paymentType._id
+        self.comment = order.comment ?? ""
         
         if let personsCount = order.personsCount {
             self.personsCount = personsCount
@@ -127,6 +128,8 @@ extension CWOrderRequest {
         }
         
         self.products = p
+        self.withdrawBonuses = order.withdrawBonuses ?? 0
+        self.change = order.change ?? 0
     }
     
 }
