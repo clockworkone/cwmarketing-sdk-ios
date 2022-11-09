@@ -27,7 +27,7 @@ public struct CWSupport: Codable {
         self.phone = phone
         self.content = content
         self.os = CWCWSupportOS(version: UIDevice.current.systemVersion, name: UIDevice.current.name)
-        self.app = CWCWSupportApp(version: dict["CFBundleShortVersionString"] as! String, build: dict["CFBundleVersion"] as! String)
+        self.app = CWCWSupportApp(version: dict["CFBundleShortVersionString"] as! String, build: dict["CFBundleVersion"] as! String, id: Bundle.main.bundleIdentifier ?? "not regognized")
         self.device = CWCWSupportDevice(brand: "Apple", model: devices[deviceName] ?? deviceName)
     }
 }
@@ -45,6 +45,7 @@ struct CWCWSupportDevice: Codable {
 struct CWCWSupportApp: Codable {
     var version: String
     var build: String
+    var id: String
 }
 
 let devices: [String:String] = [
