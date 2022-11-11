@@ -91,49 +91,49 @@ public struct CWWeight: Codable {
 }
 
 public struct CWNutrition: Codable {
-    var energy: Float?
-    var fiber: Float?
-    var fat: Float?
-    var carbohydrate: Float?
+    public var energy: Float?
+    public var fiber: Float?
+    public var fat: Float?
+    public var carbohydrate: Float?
 }
 
 public struct CWModifier: Codable {
-    var _id: String
-    var name: String
+    public var _id: String
+    public var name: String
     var externalId: String?
     var terminalId: String
-    var order: Int64?
-    var image: CWImage?
+    public var order: Int64?
+    public var image: CWImage?
     var source: String?
-    var maxAmount: Float
-    var minAmount: Float
-    var required: Bool
-    var isHidden: Bool
+    public var maxAmount: Float
+    public var minAmount: Float
+    public var required: Bool
+    public var isHidden: Bool
     var isDisabled: Bool
-    var options: [CWOptions]
+    public var options: [CWOptions]
 }
 
 public struct CWOptions: Codable {
-    var _id: String
-    var name: String
+    public var _id: String
+    public var name: String
     var externalId: String?
     var terminalId: String
-    var order: Int64?
-    var image: CWImage?
+    public var order: Int64?
+    public var image: CWImage?
     var source: String?
-    var maxAmount: Float
-    var minAmount: Float
-    var required: Bool
+    public var maxAmount: Float
+    public var minAmount: Float
+    public var required: Bool
     var isHidden: Bool
     var isDisabled: Bool
-    var price: Float
+    public var price: Float
 }
 
 public struct CWBadge: Codable {
-    var _id: String
-    var name: String
-    var image: CWImage?
-    var order: Int64?
+    public var _id: String
+    public var name: String
+    public var image: CWImage?
+    public var order: Int64?
     var companyId: String?
     var conceptId: String
     var isHidden: Bool
