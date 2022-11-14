@@ -13,7 +13,7 @@ public struct CWTerminal: Codable {
     public var city: String
     public var timezone: String
     public var delivery: String?
-    var conceptId: String
+    public var conceptId: String
     var groupId: String
     var companyId: String
     var source: String?
