@@ -80,7 +80,7 @@ public final class CW {
     public func checkToken() throws -> String {
         do {
             let user = try self.coreDataManager.user()
-            return user.token ?? "empty token"
+            return user.token ?? ""
         } catch {
             throw error
         }
@@ -269,9 +269,15 @@ public final class CW {
         }
     }
     
-    public func getImage(product: CWProduct, completion: @escaping (UIImage?) -> Void) {
-        getImage(id: product._id, url: product.image?.body) { image in
-            completion(image)
+    public func getImage(product: CWProduct, preview: Bool = false, completion: @escaping (UIImage?) -> Void) {
+        if preview {
+            getImage(id: "\(product._id)_preview", url: product.previewImage?.body) { image in
+                completion(image)
+            }
+        } else {
+            getImage(id: product._id, url: product.image?.body) { image in
+                completion(image)
+            }
         }
     }
     
@@ -295,6 +301,12 @@ public final class CW {
     
     public func getImage(content: CWContent, completion: @escaping (UIImage?) -> Void) {
         getImage(id: content._id, url: content.image) { image in
+            completion(image)
+        }
+    }
+    
+    public func getImage(story: CWStory, completion: @escaping (UIImage?) -> Void) {
+        getImage(id: story._id, url: story.preview.body) { image in
             completion(image)
         }
     }
@@ -524,7 +536,7 @@ public final class CW {
     }
     
     public func getCategories(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, isDisabled: "false", isDeleted: "false", search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/categories/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -532,7 +544,8 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
-                        completion(data, nil)
+                        let clearedData = data.filter { !$0.isDisabled && !$0.isDeleted }.sorted { $0.order ?? 0 < $1.order ?? 0}
+                        completion(clearedData, nil)
                     }
                     
                 case .failure(let err):
@@ -553,7 +566,8 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
-                        completion(data, nil)
+                        let clearedData = data.filter { !$0.isDisabled && !$0.isDeleted }.sorted { $0.order ?? 0 < $1.order ?? 0}
+                        completion(clearedData, nil)
                     }
                     
                 case .failure(let err):

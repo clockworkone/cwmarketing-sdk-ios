@@ -35,6 +35,7 @@ public struct CWCategory: Codable {
     var source: String?
     var isHidden: Bool
     var isDisabled: Bool
+    var isDeleted: Bool
 }
 
 extension Array where Element == CWCategory {
@@ -56,6 +57,7 @@ public struct CWProduct: Codable {
     public var price: Float
     public var weight: CWWeight
     public var image: CWImage?
+    public var previewImage: CWImage?
     public var nutrition: CWNutrition
     public var modifiers: [CWModifier]?
     public var badges: [CWBadge]?
@@ -68,6 +70,7 @@ public struct CWProduct: Codable {
     var source: String?
     var isHidden: Bool
     var isDisabled: Bool
+    var isDeleted: Bool
     
     @SkipCodable
     var productHash: String?
@@ -150,6 +153,8 @@ struct CWMenuRequest: Codable {
     var conceptId: String?
     var groupId: String?
     var terminalId: String?
+    var isDisabled: String?
+    var isDeleted: String?
     var search: String?
     var limit: Int64?
     var page: Int64?
