@@ -376,16 +376,21 @@ public final class CW {
     }
     
     public func updatePushToken(token: String, completion: @escaping(NSError?) -> Void) {
-        let params = CWProfileFCMRequest(push_token: token)
-        
-        AF.request("\(uri)/v1/me/fcm", method: .put, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/me/fcm?push_token=\(token)", method: .put, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseString { resp in
                 switch resp.result {
                 case .success(_):
                     completion(nil)
                 case .failure(let err):
-                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                    if let d = resp.response, let u = d.url {
+                        if #available(iOS 16.0, *) {
+                            os_log("req: %@", type: .info, u.absoluteString)
+                        } else {
+                            // Fallback on earlier versions
+                        }
+                    }
+                    if let data = resp.data, let errResp = String(data: data, encoding: .utf8) {
                         os_log("updatePushToken error response: %@", type: .error, errResp)
                     }
                     completion(err as NSError)
@@ -670,7 +675,7 @@ public final class CW {
                 case .success(let val):
                     if let data = val.data {
                         self.initCart(concepts: data)
-//                        self.initConcepts(concepts: data)
+                        self.initConcepts(concepts: data)
                         completion(data, nil)
                     }
                     
@@ -744,6 +749,19 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
+                        do {
+                            let cs = try self.coreDataManager.concepts()
+                            for c in cs {
+                                print(c.name)
+//                                if let terminals = c.terminals as [CWDTerminal] {
+//                                    for t in terminals {
+//                                        print(t.address)
+//                                    }
+//                                }
+                            }
+                        } catch {
+                            print(error.localizedDescription)
+                        }
                         completion(data, nil)
                     }
                     
@@ -1087,7 +1105,6 @@ public final class CW {
             c.setValue(conceptData.additionalData, forKey: "additionalData")
             c.setValue(conceptData.comment, forKey: "comment")
             c.setValue(conceptData.image?.body, forKey: "image")
-            c.setValue(conceptData._id, forKey: "externalId")
             c.setValue(conceptData.order, forKey: "order")
             c.setValue(Date(), forKey: "updatedAt")
             
@@ -1101,6 +1118,7 @@ public final class CW {
             c.setValue(conceptData.comment, forKey: "comment")
             c.setValue(conceptData.image?.body, forKey: "image")
             c.setValue(conceptData.order, forKey: "order")
+            c.setValue(conceptData._id, forKey: "externalId")
             c.setValue(Date(), forKey: "createdAt")
             c.setValue(Date(), forKey: "updatedAt")
             
