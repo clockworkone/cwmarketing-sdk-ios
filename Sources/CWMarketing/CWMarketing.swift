@@ -97,7 +97,7 @@ public final class CW {
                 case .success(let val):
                     if let token = val.access_token {
                         self.token = token
-                        self.headers.add(name: "Authorization", value: "Bearer: \(token)")
+                        self.headers.add(name: "Authorization", value: "Bearer \(token)")
                         
                         do {
                             try self.updateToken(token: token)
@@ -362,6 +362,15 @@ public final class CW {
                     }
                     completion(val, nil)
                 case .failure(let err):
+                    if let d = resp.request {
+                        if #available(iOS 16.0, *) {
+                            for h in d.headers {
+                                os_log("header: %@:%@", type: .info, h.name, h.value)
+                            }
+                        } else {
+                            // Fallback on earlier versions
+                        }
+                    }
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("getProfile response: %@", type: .error, errResp)
                     }
@@ -383,13 +392,6 @@ public final class CW {
                 case .success(_):
                     completion(nil)
                 case .failure(let err):
-                    if let d = resp.response, let u = d.url {
-                        if #available(iOS 16.0, *) {
-                            os_log("req: %@", type: .info, u.absoluteString)
-                        } else {
-                            // Fallback on earlier versions
-                        }
-                    }
                     if let data = resp.data, let errResp = String(data: data, encoding: .utf8) {
                         os_log("updatePushToken error response: %@", type: .error, errResp)
                     }
@@ -752,12 +754,13 @@ public final class CW {
                         do {
                             let cs = try self.coreDataManager.concepts()
                             for c in cs {
-                                print(c.name)
-//                                if let terminals = c.terminals as [CWDTerminal] {
-//                                    for t in terminals {
-//                                        print(t.address)
-//                                    }
-//                                }
+                                print(c)
+                                
+                                if let terminals = c.terminals {
+                                    for case let t as CWDTerminal in terminals {
+                                        print(t.address)
+                                    }
+                                }
                             }
                         } catch {
                             print(error.localizedDescription)
