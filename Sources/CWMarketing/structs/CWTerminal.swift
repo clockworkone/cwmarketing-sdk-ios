@@ -14,6 +14,7 @@ public struct CWTerminal: Codable {
     public var timezone: String
     public var delivery: String?
     public var conceptId: String
+    var order: Int64?
     var groupId: String
     var companyId: String
     var source: String?

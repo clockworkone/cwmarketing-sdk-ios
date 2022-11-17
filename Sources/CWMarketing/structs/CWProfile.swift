@@ -42,3 +42,7 @@ public struct CWBalance: Codable {
 struct CWProfileResponse: Codable {
     var detail: String?
 }
+
+struct CWProfileFCMRequest: Codable {
+    var push_token: String
+}

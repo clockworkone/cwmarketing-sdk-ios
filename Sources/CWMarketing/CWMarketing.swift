@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.23"
+let version = "0.0.24"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -370,6 +370,24 @@ public final class CW {
             }
     }
     
+    public func updatePushToken(token: String, completion: @escaping(NSError?) -> Void) {
+        let params = CWProfileFCMRequest(push_token: token)
+        
+        AF.request("\(uri)/v1/me/fcm", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseString { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("updatePushToken error response: %@", type: .error, errResp)
+                    }
+                    completion(err as NSError)
+                }
+            }
+    }
+    
     // MARK: - Address
     public func getAddresses() throws -> [CWAddress] {
         do {
@@ -708,12 +726,48 @@ public final class CW {
     }
     
     // MARK: - Order
-    public func getOrders() {
+    public func getOrders(page: Int64 = 1, completion: @escaping([CWUserOrder], NSError?) -> Void) {
+        let params = CWUserOrderRequest(limit: self.config.defaultLimitPerPage, page: page)
         
+        AF.request("\(uri)/v1/orders/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWUserOrderResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    }
+                    
+                    if let detail = val.detail {
+                        completion([], NSError(domain: "CWMarketing", code: 1000, userInfo: ["detail": detail]))
+                    }
+                    
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getOrders error response: %@", type: .error, errResp)
+                    }
+                    completion([], err as NSError)
+                }
+            }
     }
     
-    public func getOrderBy(id: String) {
+    public func getOrderBy(id: String, page: Int64 = 1, completion: @escaping(CWUserOrder?, NSError?) -> Void) {
+        let params = CWUserOrderRequest(limit: self.config.defaultLimitPerPage, page: page)
         
+        AF.request("\(uri)/v1/orders/\(id)", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWUserOrder.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getOrderBy id error response: %@", type: .error, errResp)
+                    }
+                    completion(nil, err as NSError)
+                }
+            }
     }
     
     public func deliveryCheck(concept: CWConcept, address: CWAddress, completion: @escaping(CWDeliveryCheck?, NSError?) -> Void) {
@@ -842,6 +896,24 @@ public final class CW {
     }
     
     // MARK: - CoreData methods
+    fileprivate func updateData(concepts data: [CWConcept]) throws {
+        let concepts = try coreDataManager.concepts()
+        
+        for d in data {
+            
+            for c in concepts {
+                if d._id == c.externalId {
+                    c.setValue(d.name, forKey: "name")
+                    c.setValue(d.additionalData, forKey: "additionalData")
+                    c.setValue(d.comment, forKey: "comment")
+                    c.setValue(d.image?.body, forKey: "image")
+                }
+            }
+        }
+        
+        try coreDataManager.save()
+    }
+    
     fileprivate func updateToken(token: String) throws {
         let user = try coreDataManager.user()
         

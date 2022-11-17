@@ -48,6 +48,22 @@ class CWCoreDataManager: NSPersistentContainer {
         return user
     }
     
+    func concepts() throws -> [CWDConcept] {
+        let fetchRequest = NSFetchRequest<CWDConcept>(entityName: "CWDConcept")
+        let sort = NSSortDescriptor(key: #keyPath(CWDConcept.order), ascending: true)
+        fetchRequest.sortDescriptors = [sort]
+        
+        return try self.viewContext.fetch(fetchRequest) as [CWDConcept]
+    }
+    
+    func terminals() throws -> [CWDTerminal] {
+        let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
+        let sort = NSSortDescriptor(key: #keyPath(CWDTerminal.order), ascending: true)
+        fetchRequest.sortDescriptors = [sort]
+        
+        return try self.viewContext.fetch(fetchRequest) as [CWDTerminal]
+    }
+    
     func addresses() throws -> [CWDAddress] {
         let fetchRequest = NSFetchRequest<CWDAddress>(entityName: "CWDAddress")
         let sort = NSSortDescriptor(key: #keyPath(CWDAddress.updatedAt), ascending: false)

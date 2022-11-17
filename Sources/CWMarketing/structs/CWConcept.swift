@@ -15,7 +15,7 @@ public struct CWConcept: Codable {
     var isDeleted: Bool
     var isDisabled: Bool
     public var additionalData: String?
-    var order: Int64
+    var order: Int64?
     public var mainGroupId: String
     public var mainTerminalId: String
     var tpcasId: String
