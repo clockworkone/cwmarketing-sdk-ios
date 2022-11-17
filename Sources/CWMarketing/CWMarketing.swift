@@ -370,10 +370,15 @@ public final class CW {
             }
     }
     
+    public func logout() throws {
+        try coreDataManager.deleteUser()
+        // TODO: - send push_token for delete
+    }
+    
     public func updatePushToken(token: String, completion: @escaping(NSError?) -> Void) {
         let params = CWProfileFCMRequest(push_token: token)
         
-        AF.request("\(uri)/v1/me/fcm", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/me/fcm", method: .put, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseString { resp in
                 switch resp.result {
@@ -665,6 +670,7 @@ public final class CW {
                 case .success(let val):
                     if let data = val.data {
                         self.initCart(concepts: data)
+//                        self.initConcepts(concepts: data)
                         completion(data, nil)
                     }
                     
@@ -678,8 +684,11 @@ public final class CW {
     }
     
     // MARK: - Terminals
-    public func getTerminals(page: Int64 = 1, completion: @escaping([CWTerminal], NSError?) -> Void) {
-        let params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
+    public func getTerminals(concept: CWConcept?, page: Int64 = 1, completion: @escaping([CWTerminal], NSError?) -> Void) {
+        var params = CWTerminalRequest(limit: self.config.defaultLimitPerPage, page: page)
+        if let concept = concept {
+            params.conceptId = concept._id
+        }
         
         AF.request("\(uri)/v1/terminals/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -895,20 +904,209 @@ public final class CW {
         return 0
     }
     
-    // MARK: - CoreData methods
-    fileprivate func updateData(concepts data: [CWConcept]) throws {
-        let concepts = try coreDataManager.concepts()
+    fileprivate func initConcepts(concepts: [CWConcept]) {
+        let group = DispatchGroup()
         
-        for d in data {
+        for var c in concepts {
+            group.enter()
+            getTerminals(concept: c) { (t, err) in
+                if let err = err {
+                    os_log("initConcepts cant get terminals by concept %{public}@", type: .error, err.localizedDescription)
+                    return
+                }
+                c.terminals = t
+                group.leave()
+            }
             
+            group.enter()
+            getPaymentTypes(concept: c) { (t, err) in
+                if let err = err {
+                    os_log("initConcepts cant get paymentTypes by concept %{public}@", type: .error, err.localizedDescription)
+                    return
+                }
+                c.paymentTypes = t
+                group.leave()
+            }
+            
+            group.enter()
+            getDeliveryTypes(concept: c) { (t, err) in
+                if let err = err {
+                    os_log("initConcepts cant get deliveryTypes by concept %{public}@", type: .error, err.localizedDescription)
+                    return
+                }
+                c.deliveryTypes = t
+                group.leave()
+            }
+        }
+    
+        
+        group.notify(queue: .main) {
             for c in concepts {
-                if d._id == c.externalId {
-                    c.setValue(d.name, forKey: "name")
-                    c.setValue(d.additionalData, forKey: "additionalData")
-                    c.setValue(d.comment, forKey: "comment")
-                    c.setValue(d.image?.body, forKey: "image")
+                do {
+                    try self.updateData(concept: c, terminals: c.terminals ?? [], paymentTypes: c.paymentTypes ?? [], deliveryTypes: c.deliveryTypes ?? [])
+                } catch {
+                    os_log("initConcepts cant updateData %{public}@", type: .error, error.localizedDescription)
                 }
             }
+        }
+    }
+    
+    // MARK: - CoreData methods
+    fileprivate func updateData(concept conceptData: CWConcept, terminals terminalsData: [CWTerminal], paymentTypes ptData: [CWPaymentType], deliveryTypes dtData: [CWDeliveryType]) throws {
+        var terminals = try coreDataManager.terminalsBy(concept: conceptData._id)
+        var insertDict: [String: CWDTerminal] = [:]
+        for t in terminals {
+            if let id = t.externalId {
+                insertDict[id] = t
+            }
+        }
+        
+        for d in terminalsData {
+            if insertDict[d._id] == nil {
+                let c = coreDataManager.newTerminal()
+                c.setValue(d.address, forKey: "address")
+                c.setValue(d.city, forKey: "city")
+                c.setValue(d.timezone, forKey: "timezone")
+                c.setValue(d.delivery, forKey: "delivery")
+                c.setValue(d._id, forKey: "externalId")
+                c.setValue(d.order, forKey: "order")
+                c.setValue(d.conceptId, forKey: "conceptId")
+                c.setValue(Date(), forKey: "createdAt")
+                c.setValue(Date(), forKey: "updatedAt")
+                
+                terminals.append(c)
+            } else {
+                if let c = try coreDataManager.terminalBy(id: d._id) {
+                    c.setValue(d.address, forKey: "address")
+                    c.setValue(d.city, forKey: "city")
+                    c.setValue(d.timezone, forKey: "timezone")
+                    c.setValue(d.delivery, forKey: "delivery")
+                    c.setValue(d.order, forKey: "order")
+                    c.setValue(d.conceptId, forKey: "conceptId")
+                    c.setValue(Date(), forKey: "updatedAt")
+                }
+            }
+        }
+        
+        var deleteDict: [String: CWTerminal] = [:]
+        for d in terminalsData {
+            deleteDict[d._id] = d
+        }
+        
+        for t in terminals {
+            if let id = t.externalId {
+                if deleteDict[id] == nil {
+                    try coreDataManager.deleteTerminal(id: id)
+                    terminals.removeAll(where: { $0.externalId == id })
+                }
+            }
+        }
+        
+        var paymentTypes = try coreDataManager.paymentTypesBy(concept: conceptData._id)
+        var insertPDict: [String: CWDPaymentType] = [:]
+        for p in paymentTypes {
+            if let id = p.externalId {
+                insertPDict[id] = p
+            }
+        }
+        
+        for d in ptData {
+            if insertPDict[d._id] == nil {
+                let c = coreDataManager.newPaymentType()
+                c.setValue(d.code, forKey: "code")
+                c.setValue(d.name, forKey: "name")
+                c.setValue(d._id, forKey: "externalId")
+                c.setValue(conceptData._id, forKey: "conceptId")
+                
+                paymentTypes.append(c)
+            } else {
+                if let c = try coreDataManager.paymentTypeBy(id: d._id) {
+                    c.setValue(d.code, forKey: "code")
+                    c.setValue(d.name, forKey: "name")
+                    c.setValue(conceptData._id, forKey: "conceptId")
+                }
+            }
+        }
+        
+        var deletePDict: [String: CWPaymentType] = [:]
+        for d in ptData {
+            deletePDict[d._id] = d
+        }
+        
+        for t in paymentTypes {
+            if let id = t.externalId {
+                if deleteDict[id] == nil {
+                    try coreDataManager.deletePaymentType(id: id)
+                    paymentTypes.removeAll(where: { $0.externalId == id })
+                }
+            }
+        }
+        
+        var deliveryTypes = try coreDataManager.deliveryTypesBy(concept: conceptData._id)
+        var insertDDict: [String: CWDDeliveryType] = [:]
+        for p in deliveryTypes {
+            if let id = p.externalId {
+                insertDDict[id] = p
+            }
+        }
+        
+        for d in dtData {
+            if insertPDict[d._id] == nil {
+                let c = coreDataManager.newDeliveryType()
+                c.setValue(d.code, forKey: "code")
+                c.setValue(d.name, forKey: "name")
+                c.setValue(d._id, forKey: "externalId")
+                c.setValue(conceptData._id, forKey: "conceptId")
+                
+                deliveryTypes.append(c)
+            } else {
+                if let c = try coreDataManager.deliveryTypesBy(id: d._id) {
+                    c.setValue(d.code, forKey: "code")
+                    c.setValue(d.name, forKey: "name")
+                    c.setValue(conceptData._id, forKey: "conceptId")
+                }
+            }
+        }
+        
+        var deleteDDict: [String: CWDeliveryType] = [:]
+        for d in dtData {
+            deleteDDict[d._id] = d
+        }
+        
+        for t in deliveryTypes {
+            if let id = t.externalId {
+                if deleteDDict[id] == nil {
+                    try coreDataManager.deleteDeliveryType(id: id)
+                    paymentTypes.removeAll(where: { $0.externalId == id })
+                }
+            }
+        }
+        
+        if let c = try coreDataManager.conceptBy(id: conceptData._id) {
+            c.setValue(conceptData.name, forKey: "name")
+            c.setValue(conceptData.additionalData, forKey: "additionalData")
+            c.setValue(conceptData.comment, forKey: "comment")
+            c.setValue(conceptData.image?.body, forKey: "image")
+            c.setValue(conceptData._id, forKey: "externalId")
+            c.setValue(conceptData.order, forKey: "order")
+            c.setValue(Date(), forKey: "updatedAt")
+            
+            c.setValue(NSSet(array: terminals), forKey: "terminals")
+            c.setValue(NSSet(array: paymentTypes), forKey: "payments")
+            c.setValue(NSSet(array: deliveryTypes), forKey: "deliveries")
+        } else {
+            let c = coreDataManager.newConcept()
+            c.setValue(conceptData.name, forKey: "name")
+            c.setValue(conceptData.additionalData, forKey: "additionalData")
+            c.setValue(conceptData.comment, forKey: "comment")
+            c.setValue(conceptData.image?.body, forKey: "image")
+            c.setValue(conceptData.order, forKey: "order")
+            c.setValue(Date(), forKey: "createdAt")
+            c.setValue(Date(), forKey: "updatedAt")
+            
+            c.setValue(NSSet(array: terminals), forKey: "terminals")
+            c.setValue(NSSet(array: paymentTypes), forKey: "payments")
+            c.setValue(NSSet(array: deliveryTypes), forKey: "deliveries")
         }
         
         try coreDataManager.save()

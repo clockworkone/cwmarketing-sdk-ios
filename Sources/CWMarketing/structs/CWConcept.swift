@@ -19,6 +19,13 @@ public struct CWConcept: Codable {
     public var mainGroupId: String
     public var mainTerminalId: String
     var tpcasId: String
+    
+    @SkipCodable
+    var terminals: [CWTerminal]?
+    @SkipCodable
+    var paymentTypes: [CWPaymentType]?
+    @SkipCodable
+    var deliveryTypes: [CWDeliveryType]?
 }
 
 struct CWConceptRequest: Codable {

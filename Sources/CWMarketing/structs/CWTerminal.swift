@@ -24,6 +24,7 @@ struct CWTerminalRequest: Codable {
     var limit: Int64?
     var page: Int64?
     var terminalId: String?
+    var conceptId: String?
 }
 
 struct CWTerminalResponse: Codable {
