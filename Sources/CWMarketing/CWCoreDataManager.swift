@@ -65,6 +65,7 @@ class CWCoreDataManager: NSPersistentContainer {
         let fetchRequest = NSFetchRequest<CWDConcept>(entityName: "CWDConcept")
         let sort = NSSortDescriptor(key: #keyPath(CWDConcept.order), ascending: true)
         fetchRequest.sortDescriptors = [sort]
+        fetchRequest.returnsObjectsAsFaults = false
         
         return try self.viewContext.fetch(fetchRequest) as [CWDConcept]
     }
@@ -90,10 +91,19 @@ class CWCoreDataManager: NSPersistentContainer {
     }
     
     // MARK: - Terminals
+    func terminals() throws -> [CWDTerminal] {
+        let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
+        fetchRequest.returnsObjectsAsFaults = false
+        let sort = NSSortDescriptor(key: #keyPath(CWDTerminal.order), ascending: true)
+        fetchRequest.sortDescriptors = [sort]
+        
+        return try self.viewContext.fetch(fetchRequest) as [CWDTerminal]
+    }
     
     func terminalsBy(concept id: String) throws -> [CWDTerminal] {
         let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
         fetchRequest.predicate = NSPredicate(format: "conceptId = %@", id)
+        fetchRequest.returnsObjectsAsFaults = false
         let sort = NSSortDescriptor(key: #keyPath(CWDTerminal.order), ascending: true)
         fetchRequest.sortDescriptors = [sort]
         

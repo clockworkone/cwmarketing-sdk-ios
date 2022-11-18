@@ -38,23 +38,23 @@
         <attribute name="name" attributeType="String"/>
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="deliveries" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDDeliveryType" inverseName="byConcept" inverseEntity="CWDDeliveryType"/>
-        <relationship name="payments" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDPaymentType" inverseName="byConcept" inverseEntity="CWDPaymentType"/>
-        <relationship name="terminals" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDTerminal" inverseName="byConcept" inverseEntity="CWDTerminal"/>
+        <relationship name="delivery" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDDeliveryType" inverseName="byConcept" inverseEntity="CWDDeliveryType"/>
+        <relationship name="payment" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDPaymentType" inverseName="byConcept" inverseEntity="CWDPaymentType"/>
+        <relationship name="terminal" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="CWDTerminal" inverseName="byConcept" inverseEntity="CWDTerminal"/>
     </entity>
     <entity name="CWDDeliveryType" representedClassName="CWDDeliveryType" syncable="YES" codeGenerationType="class">
         <attribute name="code" attributeType="String"/>
         <attribute name="conceptId" attributeType="String"/>
         <attribute name="externalId" attributeType="String"/>
         <attribute name="name" attributeType="String"/>
-        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="deliveries" inverseEntity="CWDConcept"/>
+        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="delivery" inverseEntity="CWDConcept"/>
     </entity>
     <entity name="CWDPaymentType" representedClassName="CWDPaymentType" syncable="YES" codeGenerationType="class">
         <attribute name="code" attributeType="String"/>
         <attribute name="conceptId" attributeType="String"/>
         <attribute name="externalId" attributeType="String"/>
         <attribute name="name" attributeType="String"/>
-        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="payments" inverseEntity="CWDConcept"/>
+        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="payment" inverseEntity="CWDConcept"/>
     </entity>
     <entity name="CWDProducts" representedClassName="CWDProducts" syncable="YES" codeGenerationType="class"/>
     <entity name="CWDTerminal" representedClassName="CWDTerminal" syncable="YES" codeGenerationType="class">
@@ -67,7 +67,7 @@
         <attribute name="order" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="timezone" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="terminals" inverseEntity="CWDConcept"/>
+        <relationship name="byConcept" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CWDConcept" inverseName="terminal" inverseEntity="CWDConcept"/>
     </entity>
     <entity name="CWDUser" representedClassName="CWDUser" syncable="YES" codeGenerationType="class">
         <attribute name="balance" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>

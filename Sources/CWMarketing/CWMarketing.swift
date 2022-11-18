@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.24"
+let version = "0.0.25"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -362,15 +362,6 @@ public final class CW {
                     }
                     completion(val, nil)
                 case .failure(let err):
-                    if let d = resp.request {
-                        if #available(iOS 16.0, *) {
-                            for h in d.headers {
-                                os_log("header: %@:%@", type: .info, h.name, h.value)
-                            }
-                        } else {
-                            // Fallback on earlier versions
-                        }
-                    }
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("getProfile response: %@", type: .error, errResp)
                     }
@@ -382,6 +373,27 @@ public final class CW {
     public func logout() throws {
         try coreDataManager.deleteUser()
         // TODO: - send push_token for delete
+    }
+    
+    public func deleteProfile(completion: @escaping(NSError?) -> Void) {
+        AF.request("\(uri)/v1/me/profile", method: .delete, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseString { resp in
+                switch resp.result {
+                case .success(_):
+                    do {
+                        try self.logout()
+                    } catch {
+                        completion(error as NSError)
+                    }
+                    completion(nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("deleteProfile response: %@", type: .error, errResp)
+                    }
+                    completion(err as NSError)
+                }
+            }
     }
     
     public func updatePushToken(token: String, completion: @escaping(NSError?) -> Void) {
@@ -396,6 +408,43 @@ public final class CW {
                         os_log("updatePushToken error response: %@", type: .error, errResp)
                     }
                     completion(err as NSError)
+                }
+            }
+    }
+    
+    // MARK: - Promocode
+    public func checkPromocode(code: String, concept: CWConcept, products p: [CWProduct], completion: @escaping(String, Float?, NSError?) -> Void) {
+        var products: [CWPromocodeProduct] = []
+        
+        for product in p {
+            var modifiers: [CWPromocodeProductModifier] = []
+            if let m = product.orderModifiers {
+                for modifier in m {
+                    modifiers.append(CWPromocodeProductModifier(id: modifier._id, amount: product.count ?? 1))
+                }
+            }
+            
+            products.append(CWPromocodeProduct(code: product.code, amount: product.count ?? 1, modifiers: modifiers))
+        }
+        
+        let params = CWPromocodeRequest(promocode: code, conceptId: concept._id, products: products)
+        AF.request("\(uri)/v1/me/promocodes/", method: .get, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWPromocodeResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let productCode = val.product {
+                        completion(productCode, nil, nil)
+                    }
+                    
+                    if let err = val.err, let minSum = val.minSum {
+                        completion(err, minSum, nil)
+                    }
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProfile response: %@", type: .error, errResp)
+                    }
+                    completion("", nil, err as NSError)
                 }
             }
     }
@@ -754,14 +803,14 @@ public final class CW {
                         do {
                             let cs = try self.coreDataManager.concepts()
                             for c in cs {
-                                print(c)
-                                
-                                if let terminals = c.terminals {
+                                print(c.name, c.externalId)
+                                if let terminals = c.terminal {
                                     for case let t as CWDTerminal in terminals {
                                         print(t.address)
                                     }
                                 }
                             }
+                            
                         } catch {
                             print(error.localizedDescription)
                         }
@@ -926,16 +975,17 @@ public final class CW {
     }
     
     fileprivate func initConcepts(concepts: [CWConcept]) {
+        var res = concepts
         let group = DispatchGroup()
         
-        for var c in concepts {
+        for var (i, c) in concepts.enumerated() {
             group.enter()
             getTerminals(concept: c) { (t, err) in
                 if let err = err {
                     os_log("initConcepts cant get terminals by concept %{public}@", type: .error, err.localizedDescription)
                     return
                 }
-                c.terminals = t
+                res[i].terminals = t
                 group.leave()
             }
             
@@ -945,7 +995,7 @@ public final class CW {
                     os_log("initConcepts cant get paymentTypes by concept %{public}@", type: .error, err.localizedDescription)
                     return
                 }
-                c.paymentTypes = t
+                res[i].paymentTypes = t
                 group.leave()
             }
             
@@ -955,14 +1005,14 @@ public final class CW {
                     os_log("initConcepts cant get deliveryTypes by concept %{public}@", type: .error, err.localizedDescription)
                     return
                 }
-                c.deliveryTypes = t
+                res[i].deliveryTypes = t
                 group.leave()
             }
         }
     
         
         group.notify(queue: .main) {
-            for c in concepts {
+            for c in res {
                 do {
                     try self.updateData(concept: c, terminals: c.terminals ?? [], paymentTypes: c.paymentTypes ?? [], deliveryTypes: c.deliveryTypes ?? [])
                 } catch {
@@ -991,7 +1041,7 @@ public final class CW {
                 c.setValue(d.delivery, forKey: "delivery")
                 c.setValue(d._id, forKey: "externalId")
                 c.setValue(d.order, forKey: "order")
-                c.setValue(d.conceptId, forKey: "conceptId")
+                c.setValue(conceptData._id, forKey: "conceptId")
                 c.setValue(Date(), forKey: "createdAt")
                 c.setValue(Date(), forKey: "updatedAt")
                 
@@ -1111,9 +1161,17 @@ public final class CW {
             c.setValue(conceptData.order, forKey: "order")
             c.setValue(Date(), forKey: "updatedAt")
             
-            c.setValue(NSSet(array: terminals), forKey: "terminals")
-            c.setValue(NSSet(array: paymentTypes), forKey: "payments")
-            c.setValue(NSSet(array: deliveryTypes), forKey: "deliveries")
+            for t in terminals {
+                c.addToTerminal(t)
+            }
+            
+            for p in paymentTypes {
+                c.addToPayment(p)
+            }
+            
+            for d in deliveryTypes {
+                c.addToDelivery(d)
+            }
         } else {
             let c = coreDataManager.newConcept()
             c.setValue(conceptData.name, forKey: "name")
@@ -1125,9 +1183,17 @@ public final class CW {
             c.setValue(Date(), forKey: "createdAt")
             c.setValue(Date(), forKey: "updatedAt")
             
-            c.setValue(NSSet(array: terminals), forKey: "terminals")
-            c.setValue(NSSet(array: paymentTypes), forKey: "payments")
-            c.setValue(NSSet(array: deliveryTypes), forKey: "deliveries")
+            for t in terminals {
+                c.addToTerminal(t)
+            }
+            
+            for p in paymentTypes {
+                c.addToPayment(p)
+            }
+            
+            for d in deliveryTypes {
+                c.addToDelivery(d)
+            }
         }
         
         try coreDataManager.save()
