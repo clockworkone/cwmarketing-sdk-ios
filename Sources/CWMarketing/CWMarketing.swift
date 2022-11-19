@@ -413,7 +413,7 @@ public final class CW {
     }
     
     // MARK: - Promocode
-    public func checkPromocode(code: String, concept: CWConcept, products p: [CWProduct], completion: @escaping(String, Float?, NSError?) -> Void) {
+    public func checkPromocode(code: String, concept: CWConcept, products p: [CWProduct], completion: @escaping(CWPromocode?, NSError?) -> Void) {
         var products: [CWPromocodeProduct] = []
         
         for product in p {
@@ -435,17 +435,31 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let productCode = val.product {
-                        completion(productCode, nil, nil)
+                        completion(CWPromocode(productCode: productCode), nil)
+                    }
+                    
+                     if let err = val.detail {
+                        if err == "Promocode not found" {
+                            completion(CWPromocode(productCode: nil, minOrderSum: nil, reason: .notFound), nil)
+                        }
+                    }
+                    
+                    if let err = val.err {
+                        if err == "promocode didn't start or was expired" {
+                            completion(CWPromocode(productCode: nil, minOrderSum: nil, reason: .outdated), nil)
+                        }
                     }
                     
                     if let err = val.err, let minSum = val.minSum {
-                        completion(err, minSum, nil)
+                        if err == "total order cost should be more minimal cost." {
+                            completion(CWPromocode(productCode: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                        }
                     }
                 case .failure(let err):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("checkPromocode error response: %@", type: .error, errResp)
                     }
-                    completion("", nil, err as NSError)
+                    completion(nil, err as NSError)
                 }
             }
     }
