@@ -428,7 +428,7 @@ public final class CW {
         }
         
         let params = CWPromocodeRequest(promocode: code, conceptId: concept._id, products: products)
-        AF.request("\(uri)/v1/me/promocodes/", method: .get, headers: self.headers)
+        AF.request("\(uri)/v1/me/promocodes/", method: .post, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWPromocodeResponse.self) { resp in
                 switch resp.result {
