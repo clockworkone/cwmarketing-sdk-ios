@@ -7,6 +7,18 @@
 
 import Foundation
 
+public enum CWPromocodeError {
+    case notFound
+    case minOrderSum
+    case outdated
+}
+
+public struct CWPromocode {
+    public var productCode: String?
+    public var minOrderSum: Float?
+    public var reason: CWPromocodeError?
+}
+
 struct CWPromocodeProduct: Codable {
     var code: String
     var amount: Float
