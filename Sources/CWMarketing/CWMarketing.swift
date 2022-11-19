@@ -428,6 +428,7 @@ public final class CW {
         }
         
         let params = CWPromocodeRequest(promocode: code, conceptId: concept._id, products: products)
+        print(params)
         AF.request("\(uri)/v1/promocodes/", method: .post, parameters: params, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWPromocodeResponse.self) { resp in
@@ -442,7 +443,7 @@ public final class CW {
                     }
                 case .failure(let err):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
-                        os_log("getProfile response: %@", type: .error, errResp)
+                        os_log("checkPromocode error response: %@", type: .error, errResp)
                     }
                     completion("", nil, err as NSError)
                 }
