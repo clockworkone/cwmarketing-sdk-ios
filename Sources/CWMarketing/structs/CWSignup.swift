@@ -15,8 +15,8 @@ public struct CWSignupRequest: Codable {
     public var firstName: String
     public var lastName: String
     public var email: String?
-    public var sex: CWSex
-    public var dob: Date
+    public var sex: CWSex?
+    public var dob: Date?
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -35,13 +35,15 @@ public struct CWSignupRequest: Codable {
         }
         try container.encode(curentSex, forKey: .sex)
         
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let dobString = formatter.string(from: dob)
-        try container.encode(dobString, forKey: .dob)
+        if let dob = dob {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let dobString = formatter.string(from: dob)
+            try container.encode(dobString, forKey: .dob)
+        }
     }
     
-    public init(firstName: String, lastName: String, email: String?, sex: CWSex, dob: Date) {
+    public init(firstName: String, lastName: String, email: String?, sex: CWSex?, dob: Date?) {
         self.firstName = firstName
         self.lastName = lastName
         self.email = email

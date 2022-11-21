@@ -75,9 +75,11 @@ public struct CWProduct: Codable {
     @SkipCodable
     var productHash: String?
     @SkipCodable
-    var orderModifiers: [CWModifier]?
+    public var orderModifiers: [CWModifier]?
     @SkipCodable
     public var count: Float?
+    @SkipCodable
+    public var isFromPromocode: Bool?
 }
 
 extension Array where Element == CWProduct {

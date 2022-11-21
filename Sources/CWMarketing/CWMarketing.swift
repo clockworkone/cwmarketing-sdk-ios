@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.25"
+let version = "0.0.26"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -74,6 +74,8 @@ public final class CW {
             configuration.urlCache = diskCache
             downloader = ImageDownloader(configuration: configuration, imageCache: imageCache)
         }
+        
+        self.getConcepts(withInit: true) { (_, _) in }
     }
     
     // MARK: - Check auth
@@ -428,7 +430,6 @@ public final class CW {
         }
         
         let params = CWPromocodeRequest(promocode: code, conceptId: concept._id, products: products)
-        print(params)
         AF.request("\(uri)/v1/promocodes/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWPromocodeResponse.self) { resp in
@@ -731,7 +732,7 @@ public final class CW {
     }
     
     // MARK: - Concepts
-    public func getConcepts(page: Int64 = 1, completion: @escaping([CWConcept], NSError?) -> Void) {
+    public func getConcepts(page: Int64 = 1, withInit: Bool? = false, completion: @escaping([CWConcept], NSError?) -> Void) {
         let params = CWConceptRequest(limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/concepts/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
@@ -740,8 +741,10 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
-                        self.initCart(concepts: data)
-                        self.initConcepts(concepts: data)
+                        if let withInit = withInit, withInit {
+                            self.initCart(concepts: data)
+                            self.initConcepts(concepts: data)
+                        }
                         completion(data, nil)
                     }
                     
@@ -815,21 +818,63 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let data = val.data {
+                        var orders = data
+                        var cs: [CWDConcept] = []
+                        var ts: [CWDTerminal] = []
+                        var pts: [CWDPaymentType] = []
+                        var dts: [CWDDeliveryType] = []
+                        
                         do {
-                            let cs = try self.coreDataManager.concepts()
+                            cs = try self.coreDataManager.concepts()
                             for c in cs {
-                                print(c.name, c.externalId)
                                 if let terminals = c.terminal {
-                                    for case let t as CWDTerminal in terminals {
-                                        print(t.address)
+                                    for case let p as CWDTerminal in terminals {
+                                        ts.append(p)
+                                    }
+                                }
+                                
+                                if let paymentTypes = c.payment {
+                                    for case let p as CWDPaymentType in paymentTypes {
+                                        pts.append(p)
+                                    }
+                                }
+                                
+                                if let deliveryTypes = c.delivery {
+                                    for case let p as CWDDeliveryType in deliveryTypes {
+                                        dts.append(p)
                                     }
                                 }
                             }
                             
+                            for (i, d) in orders.enumerated() {
+                                for c in cs {
+                                    if d.conceptId == c.externalId {
+                                        orders[i].concept = CWConcept(_id: c.externalId ?? "", name: c.name ?? "N/A", isDeleted: false, isDisabled: false, mainGroupId: "", mainTerminalId: "", tpcasId: "")
+                                    }
+                                }
+                                
+                                for t in ts {
+                                    if d.terminalId == t.externalId {
+                                        orders[i].terminal = CWTerminal(_id: t.externalId ?? "", address: t.address ?? "N/A", city: t.city ?? "N/A", timezone: t.timezone ?? "N/A", conceptId: t.conceptId ?? "N/A", groupId: "", companyId: "")
+                                    }
+                                }
+                                
+                                for p in pts {
+                                    if d.paymentTypeId == p.externalId {
+                                        orders[i].paymentType = CWPaymentType(_id: p.externalId ?? "N/A", name: p.name ?? "N/A", code: p.code ?? "N/A")
+                                    }
+                                }
+                                
+                                for p in dts {
+                                    if d.deliveryTypeId == p.externalId {
+                                        orders[i].deliveryType = CWDeliveryType(_id: p.externalId ?? "N/A", name: p.name ?? "N/A", code: p.code ?? "N/A")
+                                    }
+                                }
+                            }
                         } catch {
                             print(error.localizedDescription)
                         }
-                        completion(data, nil)
+                        completion(orders, nil)
                     }
                     
                     if let detail = val.detail {
@@ -993,7 +1038,7 @@ public final class CW {
         var res = concepts
         let group = DispatchGroup()
         
-        for var (i, c) in concepts.enumerated() {
+        for (i, c) in concepts.enumerated() {
             group.enter()
             getTerminals(concept: c) { (t, err) in
                 if let err = err {
@@ -1121,7 +1166,7 @@ public final class CW {
         
         for t in paymentTypes {
             if let id = t.externalId {
-                if deleteDict[id] == nil {
+                if deletePDict[id] == nil {
                     try coreDataManager.deletePaymentType(id: id)
                     paymentTypes.removeAll(where: { $0.externalId == id })
                 }
