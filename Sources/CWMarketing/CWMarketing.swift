@@ -874,7 +874,22 @@ public final class CW {
                         } catch {
                             print(error.localizedDescription)
                         }
-                        completion(orders, nil)
+                        
+                        let group = DispatchGroup()
+                        
+                        for (i, o) in orders.enumerated() {
+                            group.enter()
+                            self.getOrderFeedback(order: o) { feedback, _ in
+                                if let feedback = feedback {
+                                    orders[i].feedback = feedback
+                                }
+                                group.leave()
+                            }
+                        }
+                        
+                        group.notify(queue: .main) {
+                            completion(orders, nil)
+                        }
                     }
                     
                     if let detail = val.detail {
@@ -903,6 +918,48 @@ public final class CW {
                 case .failure(let err):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("getOrderBy id error response: %@", type: .error, errResp)
+                    }
+                    completion(nil, err as NSError)
+                }
+            }
+    }
+    
+    public func rateOrder(order: CWUserOrder, score: Int64, comment: String, completion: @escaping(NSError?) -> Void) {
+        let params = CWUserOrderFeedbackRequest(body: comment, score: score, orderId: order._id)
+        AF.request("\(uri)/v1/feedbacks/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .response { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("rateOrder error response: %@", type: .error, errResp)
+                    }
+                    completion(err as NSError)
+                }
+            }
+    }
+    
+    public func getOrderFeedback(order: CWUserOrder, completion: @escaping(CWUserOrderFeedback?, NSError?) -> Void) {
+        let params = CWUserOrderFeedbackGetRequest(limit: 1, page: 1, orderId: order._id)
+        AF.request("\(uri)/v1/feedbacks/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWUserOrderFeedbackResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data, data.count > 0 {
+                        completion(data[0], nil)
+                    } else {
+                        completion(nil, nil)
+                    }
+                    
+                    if let detail = val.detail {
+                        completion(nil, NSError(domain: "CWMarketing", code: 1000, userInfo: ["detail": detail]))
+                    }
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getOrderFeedback error response: %@", type: .error, errResp)
                     }
                     completion(nil, err as NSError)
                 }

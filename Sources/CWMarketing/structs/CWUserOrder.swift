@@ -32,7 +32,8 @@ public struct CWUserOrder: Codable {
     public var deliveryType: CWDeliveryType?
     @SkipCodable
     public var paymentType: CWPaymentType?
-    
+    @SkipCodable
+    public var feedback: CWUserOrderFeedback?
 }
 
 public struct CWUserOrderAddress: Codable {
@@ -73,6 +74,34 @@ struct CWUserOrderResponse: Codable {
     var detail: String?
 }
 
+public struct CWUserOrderFeedback: Codable {
+    var _id: String
+    public var body: String
+    public var score: Int64
+    var orderId: String
+    public var createdAt: String
+}
+
+struct CWUserOrderFeedbackRequest: Codable {
+    var body: String
+    var score: Int64
+    var orderId: String
+}
+
+public struct CWUserOrderFeedbackGetRequest: Codable {
+    var limit: Int64?
+    var page: Int64?
+    var orderId: String?
+}
+
+public struct CWUserOrderFeedbackResponse: Codable {
+    var limit: Int64?
+    var page: Int64?
+    var pages: Int64?
+    var count: Int64?
+    var data: [CWUserOrderFeedback]?
+    var detail: String?
+}
 
 extension CWUserOrder {
     
