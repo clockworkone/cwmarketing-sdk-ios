@@ -41,7 +41,7 @@ public struct CWCategory: Codable {
 extension Array where Element == CWCategory {
     
     public func byParent(category id: String) -> [CWCategory] {
-        return filter { $0.parentCategory == id && !$0.isHidden }
+        return filter { $0.parentCategory == id }
     }
     
 }
@@ -85,7 +85,7 @@ public struct CWProduct: Codable {
 extension Array where Element == CWProduct {
     
     public func by(category id: String) -> [CWProduct] {
-        return filter { $0.categoryId == id }
+        return filter { $0.categoryId == id && !$0.isHidden }
     }
     
 }
