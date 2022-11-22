@@ -30,9 +30,9 @@ struct CWDeliveryCheckAddress: Codable {
 }
 
 public struct CWDeliveryCheck: Codable {
-    var isInDeliveryArea: Bool?
-    var minOrderSum: Float?
-    var areaName: String?
-    var deliveryTime: String?
-    var deliveryPrice: Float?
+    public var isInDeliveryArea: Bool?
+    public var minOrderSum: Float?
+    public var areaName: String?
+    public var deliveryTime: String?
+    public var deliveryPrice: Float?
 }
