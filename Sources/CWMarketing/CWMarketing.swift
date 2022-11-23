@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.26"
+let version = "0.0.27"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -436,24 +436,33 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     if let productCode = val.product {
-                        completion(CWPromocode(productCode: productCode), nil)
+                        self.getProductBy(code: productCode) { (p, err) in
+                            if let err = err {
+                                completion(nil, err)
+                            }
+                            
+                            var product = p
+                            product?.isFromPromocode = true
+                            
+                            completion(CWPromocode(product: product), nil)
+                        }
                     }
                     
                      if let err = val.detail {
                         if err == "Promocode not found" {
-                            completion(CWPromocode(productCode: nil, minOrderSum: nil, reason: .notFound), nil)
+                            completion(CWPromocode(product: nil, minOrderSum: nil, reason: .notFound), nil)
                         }
                     }
                     
                     if let err = val.err {
                         if err == "promocode didn't start or was expired" {
-                            completion(CWPromocode(productCode: nil, minOrderSum: nil, reason: .outdated), nil)
+                            completion(CWPromocode(product: nil, minOrderSum: nil, reason: .outdated), nil)
                         }
                     }
                     
                     if let err = val.err, let minSum = val.minSum {
                         if err == "total order cost should be more minimal cost." {
-                            completion(CWPromocode(productCode: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                            completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
                         }
                     }
                 case .failure(let err):
@@ -670,6 +679,23 @@ public final class CW {
                         os_log("getProducts error response: %@", type: .error, errResp)
                     }
                     completion([], err as NSError)
+                }
+            }
+    }
+    
+    public func getProductBy(code: String, completion: @escaping(CWProduct?, NSError?) -> Void) {
+        AF.request("\(uri)/v1/products/code/\(code)", method: .get, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWProduct.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    completion(val, nil)
+                    
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProductBy code error response: %@", type: .error, errResp)
+                    }
+                    completion(nil, err as NSError)
                 }
             }
     }

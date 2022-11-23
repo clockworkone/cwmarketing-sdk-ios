@@ -14,7 +14,7 @@ public enum CWPromocodeError {
 }
 
 public struct CWPromocode {
-    public var productCode: String?
+    public var product: CWProduct?
     public var minOrderSum: Float?
     public var reason: CWPromocodeError?
 }

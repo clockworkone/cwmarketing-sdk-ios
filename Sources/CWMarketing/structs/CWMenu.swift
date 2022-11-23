@@ -71,6 +71,7 @@ public struct CWProduct: Codable {
     var isHidden: Bool
     var isDisabled: Bool
     var isDeleted: Bool
+    public var isDisabledDiscounts: Bool?
     
     @SkipCodable
     var productHash: String?
