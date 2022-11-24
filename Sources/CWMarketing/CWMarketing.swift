@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.27"
+let version = "0.0.28"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -435,17 +435,9 @@ public final class CW {
             .responseDecodable(of: CWPromocodeResponse.self) { resp in
                 switch resp.result {
                 case .success(let val):
-                    if let productCode = val.product {
-                        self.getProductBy(code: productCode) { (p, err) in
-                            if let err = err {
-                                completion(nil, err)
-                            }
-                            
-                            var product = p
-                            product?.isFromPromocode = true
-                            
-                            completion(CWPromocode(product: product), nil)
-                        }
+                    if var product = val.product {
+                        product.isFromPromocode = true
+                        completion(CWPromocode(product: product), nil)
                     }
                     
                      if let err = val.detail {

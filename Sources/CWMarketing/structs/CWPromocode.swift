@@ -37,7 +37,7 @@ struct CWPromocodeRequest: Codable {
 }
 
 struct CWPromocodeResponse: Codable {
-    var product: String?
+    var product: CWProduct?
     var err: String?
     var detail: String?
     var minSum: Float?
