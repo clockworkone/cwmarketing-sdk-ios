@@ -8,7 +8,7 @@
 import Foundation
 
 public struct CWNotification: Codable {
-    var _id: String
+    public var _id: String
     public var title: String
     public var subtitle: String
     public var body: String
