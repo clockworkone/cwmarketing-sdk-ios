@@ -374,6 +374,8 @@ public final class CW {
     
     public func logout() throws {
         try coreDataManager.deleteUser()
+        self.token = ""
+        self.headers.remove(name: "Authorization")
         // TODO: - send push_token for delete
     }
     
