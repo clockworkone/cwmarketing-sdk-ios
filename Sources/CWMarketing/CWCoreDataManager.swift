@@ -72,7 +72,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func conceptBy(id: String) throws -> CWDConcept? {
         let fetchRequest = NSFetchRequest<CWDConcept>(entityName: "CWDConcept")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
 
         return try self.viewContext.fetch(fetchRequest).first
     }
@@ -83,7 +83,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deleteConcept(id: String) throws {
         let fetchRequest = NSFetchRequest<CWDAddress>(entityName: "CWDConcept")
-        fetchRequest.predicate = NSPredicate(format: "id = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
         
         guard let concept = try self.viewContext.fetch(fetchRequest).first else { return }
         
@@ -102,7 +102,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func terminalsBy(concept id: String) throws -> [CWDTerminal] {
         let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
-        fetchRequest.predicate = NSPredicate(format: "conceptId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "conceptId LIKE %@", id)
         fetchRequest.returnsObjectsAsFaults = false
         let sort = NSSortDescriptor(key: #keyPath(CWDTerminal.order), ascending: true)
         fetchRequest.sortDescriptors = [sort]
@@ -112,7 +112,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func terminalBy(id: String) throws -> CWDTerminal? {
         let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
 
         return try self.viewContext.fetch(fetchRequest).first
     }
@@ -123,7 +123,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deleteTerminal(id: String) throws {
         let fetchRequest = NSFetchRequest<CWDTerminal>(entityName: "CWDTerminal")
-        fetchRequest.predicate = NSPredicate(format: "id = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
         
         guard let terminal = try self.viewContext.fetch(fetchRequest).first else { return }
         
@@ -134,14 +134,14 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func paymentTypesBy(concept id: String) throws -> [CWDPaymentType] {
         let fetchRequest = NSFetchRequest<CWDPaymentType>(entityName: "CWDPaymentType")
-        fetchRequest.predicate = NSPredicate(format: "conceptId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "conceptId LIKE %@", id)
         
         return try self.viewContext.fetch(fetchRequest) as [CWDPaymentType]
     }
     
     func paymentTypeBy(id: String) throws -> CWDPaymentType? {
         let fetchRequest = NSFetchRequest<CWDPaymentType>(entityName: "CWDPaymentType")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
 
         return try self.viewContext.fetch(fetchRequest).first
     }
@@ -152,7 +152,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deletePaymentType(id: String) throws {
         let fetchRequest = NSFetchRequest<CWDPaymentType>(entityName: "CWDPaymentType")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
         
         guard let paymentType = try self.viewContext.fetch(fetchRequest).first else { return }
         
@@ -163,14 +163,14 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deliveryTypesBy(concept id: String) throws -> [CWDDeliveryType] {
         let fetchRequest = NSFetchRequest<CWDDeliveryType>(entityName: "CWDDeliveryType")
-        fetchRequest.predicate = NSPredicate(format: "conceptId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "conceptId LIKE %@", id)
         
         return try self.viewContext.fetch(fetchRequest) as [CWDDeliveryType]
     }
     
     func deliveryTypesBy(id: String) throws -> CWDDeliveryType? {
         let fetchRequest = NSFetchRequest<CWDDeliveryType>(entityName: "CWDDeliveryType")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
 
         return try self.viewContext.fetch(fetchRequest).first
     }
@@ -181,7 +181,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deleteDeliveryType(id: String) throws {
         let fetchRequest = NSFetchRequest<CWDDeliveryType>(entityName: "CWDDeliveryType")
-        fetchRequest.predicate = NSPredicate(format: "externalId = %@", id)
+        fetchRequest.predicate = NSPredicate(format: "externalId LIKE %@", id)
         
         guard let deliveryType = try self.viewContext.fetch(fetchRequest).first else { return }
         
@@ -204,7 +204,7 @@ class CWCoreDataManager: NSPersistentContainer {
     
     func deleteAddress(id: UUID) throws {
         let fetchRequest = NSFetchRequest<CWDAddress>(entityName: "CWDAddress")
-        fetchRequest.predicate = NSPredicate(format: "id = %@", id.uuidString)
+        fetchRequest.predicate = NSPredicate(format: "id LIKE %@", id.uuidString)
         
         guard let address = try self.viewContext.fetch(fetchRequest).first else { return }
         

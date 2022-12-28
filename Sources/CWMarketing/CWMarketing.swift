@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.28"
+let version = "0.0.29"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -1221,9 +1221,9 @@ public final class CW {
         for d in ptData {
             if insertPDict[d._id] == nil {
                 let c = coreDataManager.newPaymentType()
+                c.setValue(d._id, forKey: "externalId")
                 c.setValue(d.code, forKey: "code")
                 c.setValue(d.name, forKey: "name")
-                c.setValue(d._id, forKey: "externalId")
                 c.setValue(conceptData._id, forKey: "conceptId")
                 
                 paymentTypes.append(c)
@@ -1261,9 +1261,9 @@ public final class CW {
         for d in dtData {
             if insertPDict[d._id] == nil {
                 let c = coreDataManager.newDeliveryType()
+                c.setValue(d._id, forKey: "externalId")
                 c.setValue(d.code, forKey: "code")
                 c.setValue(d.name, forKey: "name")
-                c.setValue(d._id, forKey: "externalId")
                 c.setValue(conceptData._id, forKey: "conceptId")
                 
                 deliveryTypes.append(c)
@@ -1311,12 +1311,12 @@ public final class CW {
             }
         } else {
             let c = coreDataManager.newConcept()
+            c.setValue(conceptData._id, forKey: "externalId")
             c.setValue(conceptData.name, forKey: "name")
             c.setValue(conceptData.additionalData, forKey: "additionalData")
             c.setValue(conceptData.comment, forKey: "comment")
             c.setValue(conceptData.image?.body, forKey: "image")
             c.setValue(conceptData.order, forKey: "order")
-            c.setValue(conceptData._id, forKey: "externalId")
             c.setValue(Date(), forKey: "createdAt")
             c.setValue(Date(), forKey: "updatedAt")
             
