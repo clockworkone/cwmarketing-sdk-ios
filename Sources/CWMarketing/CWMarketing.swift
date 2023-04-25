@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.29"
+let version = "0.0.30"
 let uri = "https://customer.api.cw.marketing/api"
 
 public final class CW {
@@ -309,6 +309,12 @@ public final class CW {
     
     public func getImage(story: CWStory, completion: @escaping (UIImage?) -> Void) {
         getImage(id: story._id, url: story.preview.body) { image in
+            completion(image)
+        }
+    }
+    
+    public func getImage(image: CWImage, completion: @escaping (UIImage?) -> Void) {
+        getImage(id: image.body, url: image.body) { image in
             completion(image)
         }
     }
@@ -881,7 +887,7 @@ public final class CW {
                                 
                                 for p in pts {
                                     if d.paymentTypeId == p.externalId {
-                                        orders[i].paymentType = CWPaymentType(_id: p.externalId ?? "N/A", name: p.name ?? "N/A", code: p.code ?? "N/A")
+                                        orders[i].paymentType = CWPaymentType(_id: p.externalId ?? "N/A", name: p.name ?? "N/A", code: p.code ?? "N/A", isExternal: p.isExternal)
                                     }
                                 }
                                 
@@ -1004,7 +1010,7 @@ public final class CW {
             }
     }
     
-    public func send(order: CWOrder, completion: @escaping(Bool, NSError?) -> Void) {
+    public func send(order: CWOrder, completion: @escaping(Bool, String?, NSError?) -> Void) {
         var o = CWOrderRequest(companyId: config.companyId, sourceId: config.source ?? "")
         o.prepare(order: order)
         
@@ -1012,13 +1018,19 @@ public final class CW {
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWOrderResponse.self) { resp in
                 switch resp.result {
-                case .success(_):
-                    completion(true, nil)
+                case .success(let res):
+                    if order.paymentType.isExternal {
+                        guard let awsId = res.message.components(separatedBy: " - ").last else { return completion(false, nil, NSError(domain: "Не удалось получить id заказа", code: 90001)) }
+                        self.getOnlinePaymentLink(id: awsId) { link in
+                            completion(true, link, nil)
+                        }
+                    }
+                    completion(true, nil, nil)
                 case .failure(let err):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("send order error response: %@", type: .error, errResp)
                     }
-                    completion(false, err as NSError)
+                    completion(false, nil, err as NSError)
                 }
             }
     }
@@ -1091,6 +1103,24 @@ public final class CW {
     
     
     // MARK: - Private methods
+    fileprivate func getOnlinePaymentLink(id: String, completion: @escaping(String) -> Void) {
+        AF.request("https://payments.cw.marketing/v1/create", method: .post, parameters: CWOnlinePaymentRequest(id: id), encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWOnlinePaymentResponse.self) { resp in
+                switch resp.result {
+                case .success(let res):
+                    completion(res.onlinepayment.formUrl)
+                case .failure(_):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("send support error response: %@", type: .error, errResp)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        self.getOnlinePaymentLink(id: id, completion: completion)
+                    }
+                }
+            }
+    }
+    
     fileprivate func productHash(product: CWProduct, modifiers: [CWModifier]) -> String {
         let mString = "\(product._id)\(modifiers.map { $0.options.map { $0.name }.joined() }.joined())"
         let digest = Insecure.SHA1.hash(data: mString.data(using: .utf8) ?? Data())
@@ -1225,6 +1255,7 @@ public final class CW {
                 c.setValue(d.code, forKey: "code")
                 c.setValue(d.name, forKey: "name")
                 c.setValue(conceptData._id, forKey: "conceptId")
+                c.setValue(d.isExternal, forKey: "isExternal")
                 
                 paymentTypes.append(c)
             } else {
@@ -1232,6 +1263,7 @@ public final class CW {
                     c.setValue(d.code, forKey: "code")
                     c.setValue(d.name, forKey: "name")
                     c.setValue(conceptData._id, forKey: "conceptId")
+                    c.setValue(d.isExternal, forKey: "isExternal")
                 }
             }
         }

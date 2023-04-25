@@ -36,6 +36,8 @@ public struct CWCategory: Codable {
     var isHidden: Bool
     var isDisabled: Bool
     var isDeleted: Bool
+    public var isSmart: Bool?
+    public var rrule: CWRRule?
 }
 
 extension Array where Element == CWCategory {
@@ -71,6 +73,8 @@ public struct CWProduct: Codable {
     var isHidden: Bool
     var isDisabled: Bool
     var isDeleted: Bool
+    public var isSmart: Bool?
+    public var rrule: CWRRule?
     public var isDisabledDiscounts: Bool?
     
     @SkipCodable
@@ -89,6 +93,19 @@ extension Array where Element == CWProduct {
         return filter { $0.categoryId == id && !$0.isHidden }
     }
     
+}
+
+public struct CWRRule: Codable {
+    public var freq: String
+    public var weekOfMonth: UInt8
+    public var byWeekdays: [UInt8]
+    public var fromTime: CWRRuleTime
+    public var untilTime: CWRRuleTime
+}
+
+public struct CWRRuleTime: Codable {
+    public var hour: UInt8
+    public var minute: UInt8
 }
 
 public struct CWWeight: Codable {

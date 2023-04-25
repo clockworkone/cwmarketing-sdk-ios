@@ -11,6 +11,7 @@ public struct CWPaymentType: Codable {
     var _id: String
     public var name: String
     public var code: String
+    var isExternal: Bool
 }
 
 struct CWPaymentTypeRequest: Codable {
