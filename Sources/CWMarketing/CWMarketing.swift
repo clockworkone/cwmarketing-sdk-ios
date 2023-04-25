@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.31"
+let version = "0.0.32"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -1011,7 +1011,7 @@ public final class CW {
             }
     }
     
-    public func send(order: CWOrder, completion: @escaping(Bool, String?, NSError?) -> Void) {
+    public func send(order: CWOrder, isExternal: Bool = false, completion: @escaping(Bool, String?, NSError?) -> Void) {
         var o = CWOrderRequest(companyId: config.companyId, sourceId: config.source ?? "")
         o.prepare(order: order)
         
@@ -1020,7 +1020,7 @@ public final class CW {
             .responseDecodable(of: CWOrderResponse.self) { resp in
                 switch resp.result {
                 case .success(let res):
-                    if order.paymentType.isExternal {
+                    if isExternal {
                         guard let awsId = res.message.components(separatedBy: " - ").last else { return completion(false, nil, NSError(domain: "Не удалось получить id заказа", code: 90001)) }
                         self.getOnlinePaymentLink(id: awsId) { link in
                             completion(true, link, nil)
