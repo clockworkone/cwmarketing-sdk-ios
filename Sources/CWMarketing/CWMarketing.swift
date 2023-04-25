@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.33"
+let version = "0.0.35"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -1110,7 +1110,7 @@ public final class CW {
             .responseDecodable(of: CWOnlinePaymentResponse.self) { resp in
                 switch resp.result {
                 case .success(let res):
-                    completion(res.onlinepayment.formUrl)
+                    completion(res.onlinePayment.formUrl)
                 case .failure(_):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("send support error response: %@", type: .error, errResp)
