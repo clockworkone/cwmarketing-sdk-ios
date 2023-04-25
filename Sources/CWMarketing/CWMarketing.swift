@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.32"
+let version = "0.0.33"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -1105,7 +1105,7 @@ public final class CW {
     
     // MARK: - Private methods
     fileprivate func getOnlinePaymentLink(id: String, completion: @escaping(String) -> Void) {
-        AF.request(paymentUri, method: .post, parameters: CWOnlinePaymentRequest(id: id), encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(paymentUri)?id=\(id)", method: .post, parameters: CWOnlinePaymentRequest(id: id), encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWOnlinePaymentResponse.self) { resp in
                 switch resp.result {
