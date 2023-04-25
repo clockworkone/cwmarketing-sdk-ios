@@ -13,7 +13,7 @@ public struct CWOnlinePayment: Codable {
 }
 
 public struct CWOnlinePaymentResponse: Codable {
-    public var onlinepayment: CWOnlinePayment
+    public var onlinePayment: CWOnlinePayment
 }
 
 public struct CWOnlinePaymentRequest: Codable {
