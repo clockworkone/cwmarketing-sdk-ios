@@ -18,6 +18,7 @@ public struct CWTerminal: Codable {
     var groupId: String
     var companyId: String
     var source: String?
+    var geojson: String?
 }
 
 struct CWTerminalRequest: Codable {
