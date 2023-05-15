@@ -13,7 +13,7 @@ public struct CWStory: Codable, Equatable {
         return lhs._id == rhs._id
     }
     
-    var _id: String
+    public var _id: String
     public var type: Int64
     var isDisabled: Bool?
     var isDeleted: Bool?
