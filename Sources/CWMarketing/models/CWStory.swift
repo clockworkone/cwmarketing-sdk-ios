@@ -23,6 +23,13 @@ public struct CWStory: Codable, Equatable {
     public var subtitle: String?
     public var preview: CWImage
     public var slides: [CWImage]
+    public var uiSettings: CWUISettings
+}
+
+public struct CWUISettings: Codable {
+    public var url: String
+    public var text: String
+    public var color: String
 }
 
 public struct CWImage: Codable {
