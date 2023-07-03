@@ -16,6 +16,7 @@ public struct CWConfig {
     var defaultLimitPerPage: Int64
     var source: String?
     var cacheRules: CWConfigImageCache?
+    var YMMApiKey: String?
     
     init() {
         self.apiKey = ""

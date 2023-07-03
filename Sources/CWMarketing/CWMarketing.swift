@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.38"
+let version = "0.0.39"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -665,7 +665,7 @@ public final class CW {
     public func getProducts(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
         let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
-        AF.request("\(uri)/v1/products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v2/products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProductResponse.self) { resp in
                 switch resp.result {
@@ -685,7 +685,7 @@ public final class CW {
     }
     
     public func getProductBy(code: String, completion: @escaping(CWProduct?, NSError?) -> Void) {
-        AF.request("\(uri)/v1/products/code/\(code)", method: .get, headers: self.headers)
+        AF.request("\(uri)/v2/products/code/\(code)", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProduct.self) { resp in
                 switch resp.result {
