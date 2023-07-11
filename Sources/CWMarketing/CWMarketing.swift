@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.40"
+let version = "0.0.42"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -711,6 +711,10 @@ public final class CW {
                 case .success(let val):
                     if let data = val.data {
                         completion(data, nil)
+                    }
+                    
+                    if let detail = val.detail {
+                        completion([], NSError(domain: detail, code: 400))
                     }
                     
                 case .failure(let err):
