@@ -862,8 +862,9 @@ public final class CW {
     }
     
     // MARK: - Order
-    public func getOrders(page: Int64 = 1, completion: @escaping([CWUserOrder], NSError?) -> Void) {
-        let params = CWUserOrderRequest(limit: self.config.defaultLimitPerPage, page: page)
+    public func getOrders(page: Int64 = 1, limit: Int64?, completion: @escaping([CWUserOrder], NSError?) -> Void) {
+        let l = limit != nil ? limit : self.config.defaultLimitPerPage
+        let params = CWUserOrderRequest(limit: l, page: page)
         
         AF.request("\(uri)/v1/orders/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
