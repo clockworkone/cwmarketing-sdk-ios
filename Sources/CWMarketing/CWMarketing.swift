@@ -53,7 +53,7 @@ public final class CW {
         
         os_log("CWMarketing loaded version: %@", type: .info, version)
     }
-
+    
     
     /// Set config.
     ///
@@ -349,16 +349,16 @@ public final class CW {
     
     // MARK: - Profile
     public func getProfile(completion: @escaping(CWProfile?, NSError?) -> Void) {
-//        do {
-//            let user = try self.coreDataManager.user()
-//            let profile = CWProfile(_id: user.id ?? "", firstName: user.firstName ?? "",
-//                                    lastName: user.lastName ?? "", phone: user.phone, sex: user.sex, card: user.card,
-//                                    wallet: CWWallet(auth: nil, card: user.wallet), balances: CWBalances(total: user.balance, categories: [], balances: []))
-//            completion(profile, nil)
-//        } catch {
-//            completion(nil, error as NSError)
-//        }
-
+        //        do {
+        //            let user = try self.coreDataManager.user()
+        //            let profile = CWProfile(_id: user.id ?? "", firstName: user.firstName ?? "",
+        //                                    lastName: user.lastName ?? "", phone: user.phone, sex: user.sex, card: user.card,
+        //                                    wallet: CWWallet(auth: nil, card: user.wallet), balances: CWBalances(total: user.balance, categories: [], balances: []))
+        //            completion(profile, nil)
+        //        } catch {
+        //            completion(nil, error as NSError)
+        //        }
+        
         AF.request("\(uri)/v1/me/profile", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProfile.self) { resp in
@@ -440,7 +440,6 @@ public final class CW {
         
         let params = CWPromocodeRequest(promocode: code, conceptId: concept._id, products: products)
         AF.request("\(uri)/v1/promocodes/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
-            .validate(statusCode: 200..<300)
             .responseDecodable(of: CWPromocodeResponse.self) { resp in
                 switch resp.result {
                 case .success(let val):
@@ -449,18 +448,18 @@ public final class CW {
                         completion(CWPromocode(product: product), nil)
                     }
                     
-                     if let err = val.detail {
+                    if let err = val.detail {
                         if err == "Promocode not found" {
                             completion(CWPromocode(product: nil, minOrderSum: nil, reason: .notFound), nil)
                         }
-                         
-                         if err.contains("total order cost should be more minimal cost") {
-                             os_log("total order cost should be more minimal cost", type: .info)
-                             if let minSum = Float(err.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
-                                 os_log("minSum: %@", type: .info, minSum)
-                                 completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
-                             }
-                         }
+                        
+                        if err.contains("total order cost should be more minimal cost") {
+                            os_log("total order cost should be more minimal cost", type: .info)
+                            if let minSum = Float(err.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
+                                os_log("minSum: %@", type: .info, minSum)
+                                completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                            }
+                        }
                     }
                     
                     if let err = val.err {
@@ -552,7 +551,7 @@ public final class CW {
     // MARK: - Notifications
     public func getNotifications(page: Int64 = 1, completion: @escaping([CWNotification], NSError?) -> Void) {
         let params = CWStoryRequest(limit: self.config.defaultLimitPerPage, page: page)
-
+        
         AF.request("\(uri)/v1/notifications/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWNotificationResponse.self) { resp in
@@ -577,7 +576,7 @@ public final class CW {
     // MARK: - Contents
     public func getContents(concept: CWConcept? = nil, page: Int64 = 1, completion: @escaping([CWContent], NSError?) -> Void) {
         let params = CWStoryRequest(conceptId: concept?._id, limit: self.config.defaultLimitPerPage, page: page)
-
+        
         AF.request("\(uri)/v1/contents/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWContentResponse.self) { resp in
@@ -630,7 +629,7 @@ public final class CW {
             if let err = err {
                 completion(nil, err)
             }
-
+            
             if featured.count > 0 {
                 menu.featured = featured[0].products
             }
@@ -970,7 +969,7 @@ public final class CW {
                 switch resp.result {
                 case .success(let val):
                     completion(val, nil)
-
+                    
                 case .failure(let err):
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("getOrderBy id error response: %@", type: .error, errResp)
@@ -1106,7 +1105,7 @@ public final class CW {
     // MARK: - Support
     public func send(support: CWSupport, completion: @escaping(Bool, NSError?) -> Void) {
         var supportRequest = support
-    
+        
         do {
             let user = try coreDataManager.user()
             if let id = user.id {
@@ -1206,7 +1205,7 @@ public final class CW {
                 group.leave()
             }
         }
-    
+        
         
         group.notify(queue: .main) {
             for c in res {
