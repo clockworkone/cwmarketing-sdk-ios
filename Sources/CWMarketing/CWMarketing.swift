@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.43"
+let version = "0.0.44"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -459,11 +459,11 @@ public final class CW {
                         if err == "promocode didn't start or was expired" {
                             completion(CWPromocode(product: nil, minOrderSum: nil, reason: .outdated), nil)
                         }
-                    }
-                    
-                    if let err = val.err, let minSum = val.minSum {
-                        if err == "total order cost should be more minimal cost." {
-                            completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                        
+                        if err.contains("total order cost should be more minimal cost") {
+                            if let minSum = Float(err.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
+                                completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                            }
                         }
                     }
                 case .failure(let err):
