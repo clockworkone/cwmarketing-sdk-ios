@@ -453,19 +453,19 @@ public final class CW {
                         if err == "Promocode not found" {
                             completion(CWPromocode(product: nil, minOrderSum: nil, reason: .notFound), nil)
                         }
+                         
+                         if err.contains("total order cost should be more minimal cost") {
+                             os_log("total order cost should be more minimal cost", type: .info)
+                             if let minSum = Float(err.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
+                                 os_log("minSum: %@", type: .info, minSum)
+                                 completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
+                             }
+                         }
                     }
                     
                     if let err = val.err {
                         if err == "promocode didn't start or was expired" {
                             completion(CWPromocode(product: nil, minOrderSum: nil, reason: .outdated), nil)
-                        }
-                        
-                        if err.contains("total order cost should be more minimal cost") {
-                            os_log("total order cost should be more minimal cost", type: .info)
-                            if let minSum = Float(err.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()) {
-                                os_log("minSum: %@", type: .info, minSum)
-                                completion(CWPromocode(product: nil, minOrderSum: minSum, reason: .minOrderSum), nil)
-                            }
                         }
                     }
                 case .failure(let err):
