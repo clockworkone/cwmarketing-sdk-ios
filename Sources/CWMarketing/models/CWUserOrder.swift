@@ -10,7 +10,7 @@ import Foundation
 public struct CWUserOrder: Codable {
     var _id: String
     public var number: Int
-    public var address: CWUserOrderAddress
+    public var address: CWUserOrderAddress?
     public var comment: String
     var conceptId: String
     public var deliveryTime: String
