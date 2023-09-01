@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.50"
+let version = "0.0.51"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -349,7 +349,7 @@ public final class CW {
     
     // MARK: - Transactions
     public func getTransactions(completion: @escaping([CWTransaction], NSError?) -> Void) {
-        AF.request("\(uri)/v1/trancsactions/", method: .get, headers: self.headers)
+        AF.request("\(uri)/v1/transactions/", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWTransactionResponse.self) { resp in
                 switch resp.result {
