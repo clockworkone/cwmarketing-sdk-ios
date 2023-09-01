@@ -49,7 +49,7 @@ struct CWTransactionResponse: Codable {
 
 extension CWTransaction {
     
-    mutating func changedOn(_ format: String = "dd.MM.YYYY HH:mm") -> String {
+    public mutating func changedOn(_ format: String = "dd.MM.YYYY HH:mm") -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = format
         dateFormatter.timeZone = TimeZone.current
