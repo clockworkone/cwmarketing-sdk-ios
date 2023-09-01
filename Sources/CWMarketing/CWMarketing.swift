@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.46"
+let version = "0.0.47"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -347,7 +347,44 @@ public final class CW {
         return URLRequest(url: url)
     }
     
+    // MARK: - Transactions
+    public func getTransactions(completion: @escaping([CWTransaction], NSError?) -> Void) {
+        AF.request("\(uri)/v1/me/profile", method: .get, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWTransactionResponse.self) { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data {
+                        completion(data, nil)
+                    } else {
+                        completion([], nil)
+                    }
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProfile response: %@", type: .error, errResp)
+                    }
+                    completion([], err as NSError)
+                }
+            }
+    }
+    
     // MARK: - Profile
+    public func updateProfile(_ profile: CWProfile, completion: @escaping(NSError?) -> Void) {
+        AF.request("\(uri)/v1/me/profile", method: .put, parameters: profile, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseDecodable(of: CWProfile.self) { resp in
+                switch resp.result {
+                case .success(_):
+                    completion(nil)
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("updateProfile response: %@", type: .error, errResp)
+                    }
+                    completion(err as NSError)
+                }
+            }
+    }
+    
     public func getProfile(completion: @escaping(CWProfile?, NSError?) -> Void) {
         //        do {
         //            let user = try self.coreDataManager.user()
