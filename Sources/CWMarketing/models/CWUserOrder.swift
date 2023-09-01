@@ -85,7 +85,7 @@ public struct CWUserOrderFeedback: Codable {
 struct CWUserOrderFeedbackRequest: Codable {
     var body: String
     var score: Int64
-    var orderId: String
+    var orderId: String?
 }
 
 public struct CWUserOrderFeedbackGetRequest: Codable {
