@@ -10,9 +10,10 @@ import Foundation
 public struct CWTransaction: Codable {
     var _id: String
     public var sum: Float
-    var changedOnString: String
-    var changedOn: Date
+    var changedOn: String
     var conceptId: String
+    var source: String
+    var createdAt: String
     public var concept: CWConcept
     
     public func encode(to encoder: Encoder) throws {
@@ -21,16 +22,9 @@ public struct CWTransaction: Codable {
         try container.encode(sum, forKey: .sum)
         try container.encode(conceptId, forKey: .conceptId)
         try container.encode(concept, forKey: .concept)
-        try container.encode(changedOnString, forKey: .changedOnString)
-        
-        let dateWithoutMicroseconds = changedOnString.components(separatedBy: ".")
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.timeZone = TimeZone.init(abbreviation: "UTC")
-        if let date = dateFormatter.date(from: dateWithoutMicroseconds[0]) {
-            try container.encode(date, forKey: .changedOn)
-        }
+        try container.encode(source, forKey: .source)
+        try container.encode(createdAt, forKey: .createdAt)
+        try container.encode(changedOn, forKey: .changedOn)
     }
 }
 
@@ -52,11 +46,20 @@ struct CWTransactionResponse: Codable {
 extension CWTransaction {
     
     public mutating func changedOn(_ format: String = "dd.MM.YYYY HH:mm") -> String {
+        let dateWithoutMicroseconds = changedOn.components(separatedBy: ".")
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = format
-        dateFormatter.timeZone = TimeZone.current
-        dateFormatter.locale = Locale(identifier: "ru")
-        return dateFormatter.string(from: self.changedOn)
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone.init(abbreviation: "UTC")
+        if let date = dateFormatter.date(from: dateWithoutMicroseconds[0]) {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = format
+            dateFormatter.timeZone = TimeZone.current
+            dateFormatter.locale = Locale(identifier: "ru")
+            return dateFormatter.string(from: date)
+        }
+        
+        return ""
     }
     
 }

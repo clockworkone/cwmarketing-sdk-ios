@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.52"
+let version = "0.0.53"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -360,6 +360,7 @@ public final class CW {
                         completion([], nil)
                     }
                 case .failure(let err):
+                    os_log("getTransactions err: %@", type: .error, err as CVarArg)
                     if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
                         os_log("getTransactions response: %@", type: .error, errResp)
                     }
