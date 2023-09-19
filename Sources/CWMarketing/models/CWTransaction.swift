@@ -12,13 +12,15 @@ public struct CWTransaction: Codable {
     public var sum: Float
     var changedOnString: String
     var changedOn: Date
-    public var conceptId: String
+    var conceptId: String
+    public var concept: CWConcept
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(_id, forKey: ._id)
         try container.encode(sum, forKey: .sum)
         try container.encode(conceptId, forKey: .conceptId)
+        try container.encode(concept, forKey: .concept)
         try container.encode(changedOnString, forKey: .changedOnString)
         
         let dateWithoutMicroseconds = changedOnString.components(separatedBy: ".")
