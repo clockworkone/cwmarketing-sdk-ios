@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.53"
+let version = "0.0.54"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -1032,7 +1032,7 @@ public final class CW {
     }
     
     public func rateOrder(score: Int64, comment: String, completion: @escaping(NSError?) -> Void) {
-        let params = CWUserOrderFeedbackRequest(body: comment, score: score, orderId: nil)
+        let params = CWUserOrderFeedbackRequest(body: comment, score: score, orderId: "000000000000000000000000")
         AF.request("\(uri)/v1/feedbacks/", method: .post, parameters: params, encoder: JSONParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
             .response { resp in
