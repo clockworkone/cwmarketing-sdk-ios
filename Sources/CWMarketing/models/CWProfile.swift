@@ -50,9 +50,11 @@ struct CWProfileFCMRequest: Codable {
 public struct CWProfileUpdateRequest: Codable {
     public var firstName: String
     public var lastName: String
+    public var sex: String
     
-    public init(firstName: String, lastName: String) {
+    public init(firstName: String, lastName: String, sex: String) {
         self.firstName = firstName
         self.lastName = lastName
+        self.sex = sex
     }
 }
