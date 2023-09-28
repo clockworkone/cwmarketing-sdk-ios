@@ -21,11 +21,6 @@ public struct CWProfile: Codable {
     public var favoriteProducts: [String]?
     public var balances: CWBalances
     public var detail: String?
-    
-    init(firstName: String, lastName: String) {
-        self.firstName = firstName
-        self.lastName = lastName
-    }
 }
 
 public struct CWWallet: Codable {
@@ -52,7 +47,7 @@ struct CWProfileFCMRequest: Codable {
     var push_token: String
 }
 
-struct CWProfileUpdateRequest: Codable {
-    var firstName: String
-    var lastName: String
+public struct CWProfileUpdateRequest: Codable {
+    public var firstName: String
+    public var lastName: String
 }

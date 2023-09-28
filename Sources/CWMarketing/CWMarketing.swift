@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.57"
+let version = "0.0.58"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -370,9 +370,8 @@ public final class CW {
     }
     
     // MARK: - Profile
-    public func updateProfile(_ profile: CWProfile, completion: @escaping(NSError?) -> Void) {
-        let params = CWProfileUpdateRequest(firstName: profile.firstName, lastName: profile.lastName)
-        AF.request("\(uri)/v1/me/profile", method: .put, parameters: params, headers: self.headers)
+    public func updateProfile(_ profile: CWProfileUpdateRequest, completion: @escaping(NSError?) -> Void) {
+        AF.request("\(uri)/v1/me/profile", method: .put, parameters: profile, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProfile.self) { resp in
                 switch resp.result {
