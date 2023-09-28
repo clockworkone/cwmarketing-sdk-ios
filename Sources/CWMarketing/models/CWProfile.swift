@@ -46,3 +46,8 @@ struct CWProfileResponse: Codable {
 struct CWProfileFCMRequest: Codable {
     var push_token: String
 }
+
+struct CWProfileUpdateRequest: Codable {
+    var firstName: String
+    var lastName: String
+}

@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.55"
+let version = "0.0.56"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -371,7 +371,8 @@ public final class CW {
     
     // MARK: - Profile
     public func updateProfile(_ profile: CWProfile, completion: @escaping(NSError?) -> Void) {
-        AF.request("\(uri)/v1/me/profile", method: .put, parameters: profile, headers: self.headers)
+        let params = CWProfileUpdateRequest(firstName: profile.firstName, lastName: profile.lastName)
+        AF.request("\(uri)/v1/me/profile", method: .put, parameters: params, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProfile.self) { resp in
                 switch resp.result {
@@ -387,16 +388,6 @@ public final class CW {
     }
     
     public func getProfile(completion: @escaping(CWProfile?, NSError?) -> Void) {
-        //        do {
-        //            let user = try self.coreDataManager.user()
-        //            let profile = CWProfile(_id: user.id ?? "", firstName: user.firstName ?? "",
-        //                                    lastName: user.lastName ?? "", phone: user.phone, sex: user.sex, card: user.card,
-        //                                    wallet: CWWallet(auth: nil, card: user.wallet), balances: CWBalances(total: user.balance, categories: [], balances: []))
-        //            completion(profile, nil)
-        //        } catch {
-        //            completion(nil, error as NSError)
-        //        }
-        
         AF.request("\(uri)/v1/me/profile", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseDecodable(of: CWProfile.self) { resp in
