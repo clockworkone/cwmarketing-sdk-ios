@@ -51,7 +51,7 @@ public struct CWProfileUpdateRequest: Codable {
     public var firstName: String
     public var lastName: String
     
-    init(firstName: String, lastName: String) {
+    public init(firstName: String, lastName: String) {
         self.firstName = firstName
         self.lastName = lastName
     }
