@@ -21,6 +21,11 @@ public struct CWProfile: Codable {
     public var favoriteProducts: [String]?
     public var balances: CWBalances
     public var detail: String?
+    
+    init(firstName: String, lastName: String) {
+        self.firstName = firstName
+        self.lastName = lastName
+    }
 }
 
 public struct CWWallet: Codable {
