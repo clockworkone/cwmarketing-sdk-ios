@@ -11,10 +11,10 @@ public struct CWTransaction: Codable {
     var _id: String
     public var sum: Float
     var changedOn: String
-    var conceptId: String
+    var conceptId: String?
     var source: String
     var createdAt: String
-    public var concept: CWConcept
+    public var concept: CWConcept?
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
