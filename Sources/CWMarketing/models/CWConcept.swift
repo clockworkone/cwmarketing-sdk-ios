@@ -19,6 +19,7 @@ public struct CWConcept: Codable {
     public var mainGroupId: String?
     public var mainTerminalId: String?
     var tpcasId: String
+    public var bonuses: CWConceptBonuses?
     
     @SkipCodable
     var terminals: [CWTerminal]?
@@ -26,6 +27,13 @@ public struct CWConcept: Codable {
     var paymentTypes: [CWPaymentType]?
     @SkipCodable
     var deliveryTypes: [CWDeliveryType]?
+}
+
+public struct CWConceptBonuses: Codable {
+    public var percentValue: Float
+    public var minSumma: Float?
+    public var maxSumma: Float
+
 }
 
 struct CWConceptRequest: Codable {
