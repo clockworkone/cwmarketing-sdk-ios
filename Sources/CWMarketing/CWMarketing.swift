@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.64"
+let version = "0.0.65"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -249,7 +249,10 @@ public final class CW {
         queue.sync {
             guard let cart = self.cart[conceptId] else { return }
             for product in cart {
-                let weight = product.getWeight()
+                var weight: Float = 1
+                if product.weight.min > 0 {
+                    weight = product.weight.min
+                }
                 var modifiersPrice: Float = 0
                 if let modifiers = product.orderModifiers {
                     for modifier in modifiers {
