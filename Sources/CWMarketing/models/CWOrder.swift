@@ -120,7 +120,9 @@ extension CWOrderRequest {
             var m: [CWOrderModifier] = []
             if let modifiers = product.orderModifiers {
                 for modifier in modifiers {
-                    m.append(CWOrderModifier(id: modifier._id, amount: product.count ?? 1))
+                    for option in modifier.options {
+                        m.append(CWOrderModifier(id: option._id, amount: product.count ?? 1))
+                    }
                 }
             }
             
