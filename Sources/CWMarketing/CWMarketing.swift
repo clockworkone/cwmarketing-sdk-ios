@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.67"
+let version = "0.0.68"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -550,12 +550,12 @@ public final class CW {
     
     // MARK: - Properties
     public func getProperties(name: String, completion: @escaping(String?, NSError?) -> Void) {
-        AF.request("\(uri)/v1/properties_of_companies/bulk/\(name)", method: .get, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+        AF.request("\(uri)/v1/properties_of_companies/bulk/\(name)", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
             .responseJSON { resp in
                 switch resp.result {
                 case .success(let val):
-                    if let data = val.data, let dict = convertToDictionary(text: data), let property = dict[name] as? String {
+                    if let dict = convertToDictionary(text: val), let property = dict[name] as? String {
                         completion(property, nil)
                     } else {
                         completion(nil, nil)
