@@ -552,10 +552,9 @@ public final class CW {
     public func getProperties(name: String, completion: @escaping(String?, NSError?) -> Void) {
         AF.request("\(uri)/v1/properties_of_companies/bulk/\(name)", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
-            .responseJSON { resp in
+            .responseString { resp in
                 switch resp.result {
                 case .success(let val):
-                    os_log("getProperties error response: %@", type: .info, String(data: val, encoding: String.Encoding.utf8))
                     if let data = val as? String, let dict = self.convertToDictionary(text: data), let property = dict[name] as? String {
                         completion(property, nil)
                     } else {
