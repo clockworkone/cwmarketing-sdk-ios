@@ -32,7 +32,7 @@ public struct CWConcept: Codable {
 public struct CWConceptBonuses: Codable {
     public var percentValue: Float
     public var minSumma: Float?
-    public var maxSumma: Float
+    public var maxSumma: Float?
 
 }
 
