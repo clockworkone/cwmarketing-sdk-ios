@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.66"
+let version = "0.0.67"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -546,6 +546,27 @@ public final class CW {
     
     public func deleteAddress(id: UUID) throws {
         try coreDataManager.deleteAddress(id: id)
+    }
+    
+    // MARK: - Properties
+    public func getProperties(name: String, completion: @escaping(String?, NSError?) -> Void) {
+        AF.request("\(uri)/v1/properties_of_companies/bulk/\(name)", method: .get, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
+            .validate(statusCode: 200..<300)
+            .responseJSON { resp in
+                switch resp.result {
+                case .success(let val):
+                    if let data = val.data, let dict = convertToDictionary(text: data), let property = dict[name] as? String {
+                        completion(property, nil)
+                    } else {
+                        completion(nil, nil)
+                    }
+                case .failure(let err):
+                    if let data = resp.data, let errResp = String(data: data, encoding: String.Encoding.utf8) {
+                        os_log("getProperties error response: %@", type: .error, errResp)
+                    }
+                    completion(nil, err as NSError)
+                }
+            }
     }
     
     // MARK: - Stories
@@ -1474,6 +1495,17 @@ public final class CW {
         user.setValue(profile.balances.total, forKey: "balance")
         
         try coreDataManager.save()
+    }
+    
+    func convertToDictionary(text: String) -> [String: Any]? {
+        if let data = text.data(using: .utf8) {
+            do {
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+        return nil
     }
     
 }
