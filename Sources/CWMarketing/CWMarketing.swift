@@ -555,6 +555,7 @@ public final class CW {
             .responseJSON { resp in
                 switch resp.result {
                 case .success(let val):
+                    os_log("getProperties error response: %@", type: .info, val)
                     if let data = val as? String, let dict = self.convertToDictionary(text: data), let property = dict[name] as? String {
                         completion(property, nil)
                     } else {
