@@ -555,7 +555,7 @@ public final class CW {
             .responseJSON { resp in
                 switch resp.result {
                 case .success(let val):
-                    if let dict = convertToDictionary(text: val), let property = dict[name] as? String {
+                    if let data = val as? String, let dict = convertToDictionary(text: data), let property = dict[name] as? String {
                         completion(property, nil)
                     } else {
                         completion(nil, nil)
