@@ -101,9 +101,9 @@ public enum CWCategoryDesignType: String, Codable {
 }
 
 public struct CWCategoryDesign: Codable {
-    var _id: String,
-    public var type: CWCategoryDesignType,
-    public var placeholder: String?,
+    var _id: String
+    public var type: CWCategoryDesignType
+    public var placeholder: String?
     public var imageUrl: String
 }
 
