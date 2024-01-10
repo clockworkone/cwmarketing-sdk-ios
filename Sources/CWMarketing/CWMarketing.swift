@@ -271,9 +271,12 @@ public final class CW {
     
     // MARK: - Images
     public func getImage(design: CWCategoryDesign?, completion: @escaping (UIImage?) -> Void) {
-        guard let design = design else { return nil }
-        getImage(id: design._id, url: design.imageUrl) { image in
-            completion(image)
+        if let design = design {
+            getImage(id: design._id, url: design.imageUrl) { image in
+                completion(image)
+            }
+        } else {
+            completion(nil)
         }
     }
     
