@@ -40,6 +40,7 @@ public final class CW {
     ///
     public init() {
         coreDataManager = CWCoreDataManager()
+        self.headers.add(name: "Accept-Charset", value: "utf-8")
         
         do {
             let user = try coreDataManager.user()
@@ -552,7 +553,7 @@ public final class CW {
     public func getProperties(name: String, completion: @escaping(String?, NSError?) -> Void) {
         AF.request("\(uri)/v1/properties_of_companies/bulk/\(name)", method: .get, headers: self.headers)
             .validate(statusCode: 200..<300)
-            .responseString { resp in
+            .responseString(encoding: .utf8) { resp in
                 switch resp.result {
                 case .success(let val):
                     if let data = val as? String, let dict = self.convertToDictionary(text: data), let property = dict[name] as? String {
@@ -658,7 +659,6 @@ public final class CW {
             if let err = err {
                 completion(nil, err)
             }
-            
             menu.categories = categories
             menuGroup.leave()
         }
@@ -1497,10 +1497,10 @@ public final class CW {
         try coreDataManager.save()
     }
     
-    func convertToDictionary(text: String) -> [String: Any]? {
+    func convertToDictionary(text: String) -> [String: String]? {
         if let data = text.data(using: .utf8) {
             do {
-                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                return try JSONSerialization.jsonObject(with: data, options: []) as? [String: String]
             } catch {
                 print(error.localizedDescription)
             }
