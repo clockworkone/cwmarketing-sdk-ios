@@ -97,7 +97,7 @@ extension Array where Element == CWProduct {
 }
 
 public enum CWCategoryDesignType: String, Codable {
-    public case mobile_small, mobile_big, mobile_regular
+    case mobile_small, mobile_big, mobile_regular
 }
 
 public struct CWCategoryDesign: Codable {
