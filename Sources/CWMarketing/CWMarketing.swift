@@ -13,7 +13,7 @@ import CryptoKit
 import os.log
 import CoreData
 
-let version = "0.0.69"
+let version = "0.0.70"
 let uri = "https://customer.api.cw.marketing/api"
 let paymentUri = "https://payments.cw.marketing/v1/create"
 
@@ -270,6 +270,13 @@ public final class CW {
     }
     
     // MARK: - Images
+    public func getImage(category: CWCategory, completion: @escaping (UIImage?) -> Void) {
+        guard let design = category.design else { return nil }
+        getImage(id: design._id, url: design.imageUrl) { image in
+            completion(image)
+        }
+    }
+    
     public func getImage(badge: CWBadge, completion: @escaping (UIImage?) -> Void) {
         getImage(id: badge._id, url: badge.image?.body) { image in
             completion(image)

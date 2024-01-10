@@ -38,6 +38,7 @@ public struct CWCategory: Codable {
     var isDeleted: Bool
     public var isSmart: Bool?
     public var rrule: CWRRule?
+    public var design: CWCategoryDesign?
 }
 
 extension Array where Element == CWCategory {
@@ -93,6 +94,17 @@ extension Array where Element == CWProduct {
         return filter { $0.categoryId == id && !$0.isHidden }
     }
     
+}
+
+enum CWCategoryDesignType: String, Codable {
+    case mobile_small, mobile_big, mobile_regular
+}
+
+public struct CWCategoryDesign: Codable {
+    var _id: String,
+    public var type: CWCategoryDesignType,
+    public var placeholder: String?,
+    public var imageUrl: String
 }
 
 public struct CWRRule: Codable {
