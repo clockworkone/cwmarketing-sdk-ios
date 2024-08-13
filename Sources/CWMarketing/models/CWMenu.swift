@@ -187,6 +187,7 @@ struct CWMenuRequest: Codable {
     var terminalId: String?
     var isDisabled: String?
     var isDeleted: String?
+    var isHidden: String?
     var search: String?
     var limit: Int64?
     var page: Int64?

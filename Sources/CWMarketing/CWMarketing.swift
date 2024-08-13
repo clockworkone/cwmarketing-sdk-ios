@@ -701,7 +701,7 @@ public final class CW {
     }
     
     public func getCategories(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWCategory], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, isDisabled: "false", isDeleted: "false", search: nil, limit: self.config.defaultLimitPerPage, page: page)
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, isDisabled: "false", isDeleted: "false", isHidden: "false", search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/categories/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
@@ -723,7 +723,7 @@ public final class CW {
     }
     
     public func getProducts(concept: CWConcept? = nil, groupId group: String? = nil, terminal: CWTerminal? = nil, page: Int64 = 1, completion: @escaping([CWProduct], NSError?) -> Void) {
-        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, search: nil, limit: self.config.defaultLimitPerPage, page: page)
+        let params = CWMenuRequest(conceptId: concept?._id, groupId: group, terminalId: terminal?._id, isDisabled: "false", isDeleted: "false", isHidden: "false", search: nil, limit: self.config.defaultLimitPerPage, page: page)
         
         AF.request("\(uri)/v1/products/", method: .get, parameters: params, encoder: URLEncodedFormParameterEncoder.default, headers: self.headers)
             .validate(statusCode: 200..<300)
